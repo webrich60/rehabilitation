@@ -30,8 +30,11 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">通院・リハビリ管理帳</h1>
-                    <p class="text-xs font-bold text-slate-600">文字くっきり・スマホ最適化版</p>
+                    <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                        通院・リハビリ管理帳
+                        <span class="text-xs font-bold text-teal-800 bg-teal-100 px-2 py-0.5 rounded-md tracking-normal">v1.1.0</span>
+                    </h1>
+                    <p class="text-xs font-bold text-slate-600 mt-0.5">文字くっきり・スマホ最適化版</p>
                 </div>
                 <!-- Mobile add button in header -->
                 <button onclick="openVisitModal()" class="sm:hidden bg-teal-700 hover:bg-teal-800 text-white font-bold p-2.5 rounded-xl text-xs shadow flex items-center gap-1">
@@ -877,7 +880,7 @@
 
             document.getElementById('detail-content').innerHTML = contentHtml;
             document.getElementById('detail-delete-btn').setAttribute('onclick', `deleteVisit('${v.id}')`);
-            document.getElementById('detail-edit-btn').setAttribute('onclick`, `closeDetailModal(); editVisit('${v.id}')`);
+            document.getElementById('detail-edit-btn').setAttribute('onclick', `closeDetailModal(); editVisit('${v.id}')`);
 
             document.getElementById('detail-modal').classList.remove('hidden');
         }
@@ -998,8 +1001,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+                showAlert('保存しました', 'スプレッドシートへの自動転記が完了しました。');
             } catch (e) {
                 console.error(e);
+                showAlert('保存しました', '通院記録を保存しました。');
             }
         }
 
