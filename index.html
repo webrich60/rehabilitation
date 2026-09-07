@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>病院通院履歴管理</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font & Tailwind Config -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans JP"', 'Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 text-slate-900 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- Header -->
+    <header class="bg-white border-b-2 border-slate-300 sticky top-0 z-30 shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
+                <div class="bg-teal-700 text-white p-2.5 rounded-xl shadow flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">通院・リハビリ管理帳</h1>
+                    <p class="text-xs font-bold text-slate-600">文字くっきり・スマホ最適化版</p>
+                </div>
+                <!-- Mobile add button in header -->
+                <button onclick="openVisitModal()" class="sm:hidden bg-teal-700 hover:bg-teal-800 text-white font-bold p-2.5 rounded-xl text-xs shadow flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                    追加
+                </button>
+            </div>
+            <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end overflow-x-auto pb-1 sm:pb-0">
+                <button onclick="openSyncModal()" class="bg-emerald-50 border-2 border-emerald-300 hover:bg-emerald-100 text-emerald-900 font-bold px-3 py-2 rounded-xl text-xs sm:text-sm transition shadow-xs flex items-center gap-1.5 shrink-0">
+                    <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    スプレッドシート連携
+                </button>
+                <button onclick="openHospitalModal()" class="bg-white border-2 border-slate-300 hover:bg-slate-100 text-slate-800 font-bold px-3 py-2 rounded-xl text-xs sm:text-sm transition shadow-xs flex items-center gap-1.5 shrink-0">
+                    <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"></path></svg>
+                    病院管理
+                </button>
+                <button onclick="openVisitModal()" class="hidden sm:flex bg-teal-700 hover:bg-teal-800 text-white font-bold px-4 py-2 rounded-xl text-sm transition shadow-md items-center gap-2 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                    通院記録を追加
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col gap-5">
+        
+        <!-- Controls & View Switcher -->
+        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border-2 border-slate-300 shadow-sm">
+            <!-- View Mode Tabs (Vibrant & Clear Active state) -->
+            <div class="flex bg-slate-100 p-1.5 rounded-xl w-full sm:w-auto border-2 border-slate-200 gap-1.5">
+                <button onclick="switchView('calendar')" id="btn-calendar" class="flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs sm:text-sm font-black transition bg-teal-700 text-white shadow-md flex items-center justify-center gap-1.5">
+                    📅 カレンダー表示
+                </button>
+                <button onclick="switchView('list')" id="btn-list" class="flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs sm:text-sm font-black transition text-slate-700 hover:bg-slate-200 flex items-center justify-center gap-1.5">
+                    📋 一覧・履歴表示
+                </button>
+            </div>
+
+            <!-- Filter & Month Controls -->
+            <div class="flex items-center justify-between sm:justify-end gap-2.5">
+                <div class="flex items-center gap-1.5 bg-slate-50 border-2 border-slate-300 px-2 py-1.5 rounded-xl">
+                    <button onclick="changeMonth(-1)" class="p-1.5 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition text-slate-800 font-bold">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <span id="current-month-label" class="font-black text-slate-900 text-base sm:text-lg min-w-[110px] text-center">2026年9月</span>
+                    <button onclick="changeMonth(1)" class="p-1.5 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition text-slate-800 font-bold">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+                <select id="hospital-filter" onchange="render()" class="bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-xs sm:text-sm rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-teal-600">
+                    <option value="">すべての病院</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Calendar View -->
+        <div id="view-calendar" class="bg-white rounded-2xl border-2 border-slate-300 shadow-sm overflow-hidden transition-all">
+            <!-- Days of week header -->
+            <div class="grid grid-cols-7 bg-slate-200 border-b-2 border-slate-300 text-center text-xs sm:text-sm font-black py-2.5 text-slate-800">
+                <span class="text-rose-700">日</span>
+                <span>月</span>
+                <span>火</span>
+                <span>水</span>
+                <span>木</span>
+                <span>金</span>
+                <span class="text-blue-700">土</span>
+            </div>
+            <!-- Calendar Grid Body -->
+            <div id="calendar-grid" class="grid grid-cols-7 auto-rows-fr divide-x-2 divide-y-2 divide-slate-200 bg-slate-200">
+                <!-- Javascript will inject calendar cells here -->
+            </div>
+        </div>
+
+        <!-- List View -->
+        <div id="view-list" class="hidden flex-col gap-3.5">
+            <div id="visits-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <!-- Javascript will inject visit cards here -->
+            </div>
+            <div id="empty-state" class="hidden bg-white rounded-2xl border-2 border-slate-300 p-10 text-center">
+                <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-500 font-bold">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                </div>
+                <h3 class="text-base font-black text-slate-800">通院記録がありません</h3>
+                <p class="text-xs sm:text-sm text-slate-600 mt-1">上のボタンから新しい通院記録を追加してください。</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Visit Add/Edit Modal -->
+    <div id="visit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden transform transition-all border-t-4 sm:border-2 border-teal-700">
+            <div class="px-5 py-4 border-b-2 border-slate-200 flex justify-between items-center bg-slate-50">
+                <h3 id="visit-modal-title" class="font-black text-slate-900 text-base sm:text-lg">通院記録の追加</h3>
+                <button onclick="closeVisitModal()" class="text-slate-500 hover:text-slate-800 p-2 rounded-xl hover:bg-slate-200 transition font-bold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form id="visit-form" onsubmit="saveVisit(event)" class="p-5 sm:p-6 space-y-4 max-h-[82vh] overflow-y-auto">
+                <input type="hidden" id="visit-id">
+                
+                <div>
+                    <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">通院先病院 <span class="text-rose-600">*</span></label>
+                    <div class="flex gap-2">
+                        <select id="visit-hospital" required class="flex-1 bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-sm sm:text-base rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
+                            <!-- Options injected by JS -->
+                        </select>
+                        <button type="button" onclick="openHospitalModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3 py-3 rounded-xl text-xs font-black transition shrink-0">病院管理</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">通院日 <span class="text-rose-600">*</span></label>
+                        <input type="date" id="visit-date" required class="w-full bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-sm sm:text-base rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">通院時間・予約時間</label>
+                        <input type="time" id="visit-time" class="w-full bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-sm sm:text-base rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs sm:text-sm font-black text-slate-800">通院理由・診療科・症状 <span class="text-rose-600">*</span></label>
+                        <button type="button" onclick="openTemplateModal('reason')" class="text-xs font-bold text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 px-2.5 py-1 rounded-lg transition border border-teal-200">➕ よく使う理由の管理</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="visit-reason-select" onchange="onReasonSelectChange()" class="w-1/3 bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-xs sm:text-sm rounded-xl px-2.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
+                            <option value="">よく使う理由から選択</option>
+                        </select>
+                        <input type="text" id="visit-reason" required placeholder="例：定期診察、右膝の痛み" class="flex-1 bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-sm sm:text-base rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs sm:text-sm font-black text-slate-800">リハビリ内容・メニュー</label>
+                        <button type="button" onclick="openTemplateModal('rehab')" class="text-xs font-bold text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100 px-2.5 py-1 rounded-lg transition border border-teal-200">➕ よく使うリハビリの管理</button>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="visit-rehab-select" onchange="onRehabSelectChange()" class="w-1/3 bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-xs sm:text-sm rounded-xl px-2.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
+                            <option value="">よく使うメニューから選択</option>
+                        </select>
+                        <textarea id="visit-rehab" rows="2" placeholder="例：膝の曲げ伸ばし運動、低周波15分" class="flex-1 bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-sm sm:text-base rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600 resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs sm:text-sm font-black text-slate-800 mb-1">メモ・医師からの指示など</label>
+                    <textarea id="visit-notes" rows="2" placeholder="例：次回は2週間後。家でも毎日ストレッチ。" class="w-full bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-sm sm:text-base rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600 resize-none"></textarea>
+                </div>
+
+                <div class="pt-3 flex items-center justify-end gap-3 border-t-2 border-slate-200">
+                    <button type="button" onclick="closeVisitModal()" class="px-5 py-3 rounded-xl border-2 border-slate-300 text-slate-800 text-sm font-black hover:bg-slate-100 transition">キャンセル</button>
+                    <button type="submit" class="px-7 py-3 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-sm font-black transition shadow-md">保存する</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Template Management Modal -->
+    <div id="template-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl overflow-hidden transform transition-all border-t-4 sm:border-2 border-teal-700">
+            <div class="px-5 py-4 border-b-2 border-slate-200 flex justify-between items-center bg-slate-50">
+                <h3 id="template-modal-title" class="font-black text-slate-900 text-base sm:text-lg">よく使う項目の管理</h3>
+                <button onclick="closeTemplateModal()" class="text-slate-500 hover:text-slate-800 p-2 rounded-xl hover:bg-slate-200 transition font-bold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-5 sm:p-6 space-y-4 max-h-[82vh] overflow-y-auto">
+                <form id="template-form" onsubmit="saveTemplate(event)" class="space-y-3 bg-slate-50 p-4 rounded-2xl border-2 border-slate-300">
+                    <input type="hidden" id="template-type">
+                    <h4 id="template-form-heading" class="text-xs font-black text-slate-700 uppercase tracking-wider">項目を追加</h4>
+                    <div>
+                        <input type="text" id="new-template-text" required placeholder="内容を入力" class="w-full bg-white border-2 border-slate-300 text-slate-900 font-bold text-sm rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
+                    </div>
+                    <button type="submit" class="w-full bg-teal-700 hover:bg-teal-800 text-white font-black py-3 rounded-xl text-sm transition shadow">リストに追加する</button>
+                </form>
+
+                <div>
+                    <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider mb-2">登録済みの項目</h4>
+                    <div id="template-list-container" class="space-y-2">
+                        <!-- Javascript injects template list -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hospital Management Modal -->
+    <div id="hospital-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl overflow-hidden transform transition-all border-t-4 sm:border-2 border-slate-700">
+            <div class="px-5 py-4 border-b-2 border-slate-200 flex justify-between items-center bg-slate-50">
+                <h3 class="font-black text-slate-900 text-base sm:text-lg">病院リスト管理</h3>
+                <button onclick="closeHospitalModal()" class="text-slate-500 hover:text-slate-800 p-2 rounded-xl hover:bg-slate-200 transition font-bold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-5 sm:p-6 space-y-4 max-h-[82vh] overflow-y-auto">
+                <form id="hospital-form" onsubmit="saveHospital(event)" class="space-y-3 bg-slate-50 p-4 rounded-2xl border-2 border-slate-300">
+                    <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider">新しい病院を追加</h4>
+                    <div>
+                        <input type="text" id="new-hospital-name" required placeholder="病院名（例：〇〇整形外科）" class="w-full bg-white border-2 border-slate-300 text-slate-900 font-bold text-sm rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
+                    </div>
+                    <div>
+                        <input type="text" id="new-hospital-dept" placeholder="主な診療科（例：整形外科・リハビリ科）" class="w-full bg-white border-2 border-slate-300 text-slate-900 font-bold text-sm rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
+                    </div>
+                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-black py-3 rounded-xl text-sm transition shadow">病院を追加する</button>
+                </form>
+
+                <div>
+                    <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider mb-2">登録済みの病院</h4>
+                    <div id="hospital-list-container" class="space-y-2">
+                        <!-- Javascript will inject hospital list -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google Sheets Sync Modal -->
+    <div id="sync-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden transform transition-all border-t-4 sm:border-2 border-emerald-600">
+            <div class="px-5 py-4 border-b-2 border-slate-200 flex justify-between items-center bg-emerald-50">
+                <h3 class="font-black text-slate-900 text-base sm:text-lg flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    スプレッドシート連携・CSV出力
+                </h3>
+                <button onclick="closeSyncModal()" class="text-slate-500 hover:text-slate-800 p-2 rounded-xl hover:bg-slate-200 transition font-bold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-5 sm:p-6 space-y-4 max-h-[82vh] overflow-y-auto">
+                <div class="bg-emerald-50/80 border-2 border-emerald-200 rounded-2xl p-4 text-xs sm:text-sm text-slate-800 space-y-2 font-bold">
+                    <p>💡 <span class="text-emerald-900 font-black">スプレッドシート設定のポイント</span></p>
+                    <p class="font-medium text-slate-700 leading-relaxed">
+                        スプレッドシートのタイトル名おすすめ：<br>
+                        <code class="bg-white px-2 py-0.5 rounded border border-emerald-300 font-black text-emerald-900">病院通院・リハビリ履歴管理</code><br><br>
+                        1行目のヘッダー項目（左から順に）：<br>
+                        <span class="text-xs text-slate-700 font-mono">登録日時 | 病院名 | 診療科 | 日付 | 時間 | 通院理由 | リハビリ内容 | メモ</span>
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-xs sm:text-sm font-black text-slate-800">GAS Webアプリ URL (自動送信先)</label>
+                    <input type="text" id="sync-webhook-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-xs sm:text-sm rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-emerald-600">
+                    <button onclick="saveWebhookUrl()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black py-2.5 rounded-xl text-sm transition">
+                        連携URLを保存する
+                    </button>
+                </div>
+
+                <div class="pt-3 border-t-2 border-slate-200 flex flex-col gap-2.5">
+                    <button onclick="exportCSV()" class="w-full bg-white border-2 border-slate-300 hover:bg-slate-100 text-slate-800 font-black py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-xs">
+                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        すべてのデータをCSVでダウンロード（Excel・スプレッドシート用）
+                    </button>
+                    <button onclick="syncToSheetManually()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                        登録済みデータをスプレッドシート（WebHook）に一括送信
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detail-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden transform transition-all border-t-4 sm:border-2 border-slate-700">
+            <div class="px-5 py-4 border-b-2 border-slate-200 flex justify-between items-center bg-slate-50">
+                <h3 class="font-black text-slate-900 text-base sm:text-lg">通院記録の詳細</h3>
+                <button onclick="closeDetailModal()" class="text-slate-500 hover:text-slate-800 p-2 rounded-xl hover:bg-slate-200 transition font-bold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="detail-content" class="p-5 sm:p-6 space-y-4 max-h-[82vh] overflow-y-auto">
+                <!-- Javascript injects details here -->
+            </div>
+            <div class="px-5 sm:px-6 py-3.5 border-t-2 border-slate-200 bg-slate-50 flex justify-between items-center">
+                <button id="detail-delete-btn" onclick="" class="text-rose-700 hover:text-rose-800 text-sm font-black px-3 py-2 rounded-xl hover:bg-rose-100 transition">削除する</button>
+                <div class="flex gap-2">
+                    <button onclick="closeDetailModal()" class="px-4 py-2.5 rounded-xl border-2 border-slate-300 text-slate-800 text-sm font-black hover:bg-slate-100 transition">閉じる</button>
+                    <button id="detail-edit-btn" onclick="" class="px-5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-sm font-black transition shadow">編集する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial state data or load from localStorage
+        let hospitals = JSON.parse(localStorage.getItem('hospital_tracker_hospitals')) || [
+            { id: 'h1', name: 'さくら総合病院', dept: '総合診療・整形外科' },
+            { id: 'h2', name: 'ひまわりリハビリクリニック', dept: 'リハビリテーション科' }
+        ];
+
+        let reasonTemplates = JSON.parse(localStorage.getItem('hospital_tracker_reasons')) || [
+            '定期診察・レントゲン確認',
+            '膝の痛み・診察',
+            '腰の痛み・リハビリ',
+            '薬の処方・血液検査'
+        ];
+
+        let rehabTemplates = JSON.parse(localStorage.getItem('hospital_tracker_rehabs')) || [
+            '関節可動域のチェック、アイシング指導',
+            '低周波治療15分、太ももの筋トレ、歩行訓練',
+            'マッサージ、ストレッチ指導',
+            '平行棒での歩行練習、階段昇降'
+        ];
+
+        let visits = JSON.parse(localStorage.getItem('hospital_tracker_visits')) || [
+            {
+                id: 'v1',
+                hospitalId: 'h1',
+                date: '2026-09-04',
+                time: '10:00',
+                reason: '定期診察・レントゲン確認',
+                rehab: '関節可動域のチェック、アイシング指導',
+                notes: '順調に回復中。次回2週間後。'
+            },
+            {
+                id: 'v2',
+                hospitalId: 'h2',
+                date: '2026-09-07',
+                time: '14:30',
+                reason: '膝の痛み・診察',
+                rehab: '低周波治療15分、太ももの筋トレ、歩行訓練',
+                notes: '自宅でも毎日スクワットを行うこと。'
+            }
+        ];
+
+        let webhookUrl = localStorage.getItem('hospital_tracker_webhook') || '';
+
+        let currentYear = 2026;
+        let currentMonth = 8; // September (0-indexed)
+        let currentView = 'calendar'; // 'calendar' or 'list'
+
+        const hospitalColors = [
+            { bg: 'bg-teal-100', text: 'text-teal-900', border: 'border-teal-400', dot: 'bg-teal-700' },
+            { bg: 'bg-indigo-100', text: 'text-indigo-900', border: 'border-indigo-400', dot: 'bg-indigo-700' },
+            { bg: 'bg-amber-100', text: 'text-amber-900', border: 'border-amber-400', dot: 'bg-amber-700' },
+            { bg: 'bg-rose-100', text: 'text-rose-900', border: 'border-rose-400', dot: 'bg-rose-700' },
+            { bg: 'bg-sky-100', text: 'text-sky-900', border: 'border-sky-400', dot: 'bg-sky-700' },
+        ];
+
+        function getHospitalColor(hospitalId) {
+            const index = hospitals.findIndex(h => h.id === hospitalId);
+            if (index === -1) return hospitalColors[0];
+            return hospitalColors[index % hospitalColors.length];
+        }
+
+        function saveData() {
+            localStorage.setItem('hospital_tracker_hospitals', JSON.stringify(hospitals));
+            localStorage.setItem('hospital_tracker_visits', JSON.stringify(visits));
+            localStorage.setItem('hospital_tracker_reasons', JSON.stringify(reasonTemplates));
+            localStorage.setItem('hospital_tracker_rehabs', JSON.stringify(rehabTemplates));
+            localStorage.setItem('hospital_tracker_webhook', webhookUrl);
+        }
+
+        window.onload = function() {
+            const today = new Date();
+            currentYear = today.getFullYear();
+            currentMonth = today.getMonth();
+            document.getElementById('sync-webhook-url').value = webhookUrl;
+            render();
+        }
+
+        function switchView(view) {
+            currentView = view;
+            const btnCal = document.getElementById('btn-calendar');
+            const btnList = document.getElementById('btn-list');
+            const viewCal = document.getElementById('view-calendar');
+            const viewList = document.getElementById('view-list');
+
+            if (view === 'calendar') {
+                btnCal.className = 'flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs sm:text-sm font-black transition bg-teal-700 text-white shadow-md flex items-center justify-center gap-1.5';
+                btnList.className = 'flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs sm:text-sm font-black transition text-slate-700 hover:bg-slate-200 flex items-center justify-center gap-1.5';
+                viewCal.classList.remove('hidden');
+                viewList.classList.add('hidden');
+                viewList.classList.remove('flex');
+            } else {
+                btnList.className = 'flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs sm:text-sm font-black transition bg-teal-700 text-white shadow-md flex items-center justify-center gap-1.5';
+                btnCal.className = 'flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs sm:text-sm font-black transition text-slate-700 hover:bg-slate-200 flex items-center justify-center gap-1.5';
+                viewList.classList.remove('hidden');
+                viewList.classList.add('flex');
+                viewCal.classList.add('hidden');
+            }
+            render();
+        }
+
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            render();
+        }
+
+        function render() {
+            document.getElementById('current-month-label').innerText = `${currentYear}年${currentMonth + 1}月`;
+            updateHospitalDropdowns();
+            updateTemplateDropdowns();
+
+            if (currentView === 'calendar') {
+                renderCalendar();
+            } else {
+                renderList();
+            }
+        }
+
+        function updateTemplateDropdowns() {
+            const reasonSelect = document.getElementById('visit-reason-select');
+            let reasonHtml = '<option value="">よく使う理由から選択</option>';
+            reasonTemplates.forEach(r => {
+                reasonHtml += `<option value="${r}">${r}</option>`;
+            });
+            reasonSelect.innerHTML = reasonHtml;
+
+            const rehabSelect = document.getElementById('visit-rehab-select');
+            let rehabHtml = '<option value="">よく使うメニューから選択</option>';
+            rehabTemplates.forEach(r => {
+                rehabHtml += `<option value="${r}">${r}</option>`;
+            });
+            rehabSelect.innerHTML = rehabHtml;
+        }
+
+        function onReasonSelectChange() {
+            const val = document.getElementById('visit-reason-select').value;
+            if (val) {
+                document.getElementById('visit-reason').value = val;
+            }
+        }
+
+        function onRehabSelectChange() {
+            const val = document.getElementById('visit-rehab-select').value;
+            if (val) {
+                document.getElementById('visit-rehab').value = val;
+            }
+        }
+
+        function updateHospitalDropdowns() {
+            const filterSelect = document.getElementById('hospital-filter');
+            const visitSelect = document.getElementById('visit-hospital');
+            const hospitalListContainer = document.getElementById('hospital-list-container');
+
+            const currentFilter = filterSelect.value;
+            const currentVisitHospital = visitSelect.value;
+
+            let filterHtml = '<option value="">すべての病院</option>';
+            hospitals.forEach(h => {
+                filterHtml += `<option value="${h.id}" ${currentFilter === h.id ? 'selected' : ''}>${h.name}</option>`;
+            });
+            filterSelect.innerHTML = filterHtml;
+
+            let visitHtml = '';
+            hospitals.forEach(h => {
+                visitHtml += `<option value="${h.id}" ${currentVisitHospital === h.id ? 'selected' : ''}>${h.name} (${h.dept || '診療科なし'})</option>`;
+            });
+            visitSelect.innerHTML = visitHtml;
+
+            if (hospitals.length === 0) {
+                hospitalListContainer.innerHTML = '<p class="text-xs text-slate-500 text-center py-4 font-bold">病院が登録されていません</p>';
+            } else {
+                let listHtml = '';
+                hospitals.forEach(h => {
+                    listHtml += `
+                        <div class="flex items-center justify-between p-3.5 bg-white border-2 border-slate-300 rounded-xl shadow-xs">
+                            <div>
+                                <h5 class="text-sm font-black text-slate-900">${h.name}</h5>
+                                <p class="text-xs font-bold text-slate-600">${h.dept || '診療科未設定'}</p>
+                            </div>
+                            <button onclick="deleteHospital('${h.id}')" class="text-rose-700 hover:bg-rose-100 p-2 rounded-xl transition text-xs font-black flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                削除
+                            </button>
+                        </div>
+                    `;
+                });
+                hospitalListContainer.innerHTML = listHtml;
+            }
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            const hospitalFilter = document.getElementById('hospital-filter').value;
+
+            const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const prevDaysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+            let html = '';
+
+            const filteredVisits = visits.filter(v => {
+                if (hospitalFilter && v.hospitalId !== hospitalFilter) return false;
+                return true;
+            });
+
+            for (let i = firstDayIndex - 1; i >= 0; i--) {
+                const dayNum = prevDaysInMonth - i;
+                html += `
+                    <div class="bg-slate-200/60 min-h-[105px] p-2 text-slate-400 flex flex-col justify-between">
+                        <span class="text-xs font-bold">${dayNum}</span>
+                    </div>
+                `;
+            }
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const monthStr = String(currentMonth + 1).padStart(2, '0');
+                const dayStr = String(day).padStart(2, '0');
+                const dateString = `${currentYear}-${monthStr}-${dayStr}`;
+                const isToday = (dateString === todayStr);
+
+                const dayVisits = filteredVisits.filter(v => v.date === dateString);
+
+                html += `
+                    <div class="bg-white min-h-[120px] p-2 sm:p-2.5 flex flex-col justify-between transition hover:bg-slate-50 group">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs sm:text-sm font-black ${isToday ? 'bg-teal-700 text-white w-7 h-7 rounded-full flex items-center justify-center shadow' : 'text-slate-900'}">${day}</span>
+                            <button onclick="openVisitModalForDate('${dateString}')" class="text-teal-700 hover:bg-teal-100 p-1.5 rounded-lg transition font-black text-xs flex items-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                            </button>
+                        </div>
+                        <div class="flex-1 overflow-y-auto space-y-1.5 mt-1.5 max-h-[95px] pr-0.5">
+                `;
+
+                dayVisits.forEach(v => {
+                    const hospital = hospitals.find(h => h.id === v.hospitalId);
+                    const hName = hospital ? hospital.name : '病院';
+                    const color = getHospitalColor(v.hospitalId);
+
+                    html += `
+                        <div onclick="openDetailModal('${v.id}')" class="${color.bg} ${color.text} border-2 ${color.border} rounded-xl p-2 text-xs cursor-pointer hover:shadow transition">
+                            <div class="flex items-center justify-between font-black">
+                                <span class="truncate">${hName}</span>
+                                ${v.time ? `<span class="text-[11px] font-extrabold px-1 rounded bg-white/70">${v.time}</span>` : ''}
+                            </div>
+                            <div class="text-[11px] font-bold truncate opacity-90 mt-0.5">${v.reason}</div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            const totalCellsSoFar = firstDayIndex + daysInMonth;
+            const remainingCells = totalCellsSoFar % 7 === 0 ? 0 : 7 - (totalCellsSoFar % 7);
+            for (let day = 1; day <= remainingCells; day++) {
+                html += `
+                    <div class="bg-slate-200/60 min-h-[105px] p-2 text-slate-400 flex flex-col justify-between">
+                        <span class="text-xs font-bold">${day}</span>
+                    </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        function renderList() {
+            const container = document.getElementById('visits-list-container');
+            const emptyState = document.getElementById('empty-state');
+            const hospitalFilter = document.getElementById('hospital-filter').value;
+
+            let filteredVisits = visits.filter(v => {
+                if (hospitalFilter && v.hospitalId !== hospitalFilter) return false;
+                return true;
+            });
+
+            filteredVisits.sort((a, b) => new Date(b.date) - new Date(b.date === a.date ? 0 : a.date) || b.date.localeCompare(a.date));
+
+            if (filteredVisits.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            emptyState.classList.remove('flex');
+
+            let html = '';
+            filteredVisits.forEach(v => {
+                const hospital = hospitals.find(h => h.id === v.hospitalId);
+                const hName = hospital ? hospital.name : '不明な病院';
+                const hDept = hospital ? hospital.dept : '';
+                const color = getHospitalColor(v.hospitalId);
+
+                const dateObj = new Date(v.date);
+                const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
+                const formattedDate = `${dateObj.getFullYear()}年${dateObj.getMonth() + 1}月${dateObj.getDate()}日 (${dayOfWeek})`;
+
+                html += `
+                    <div class="bg-white rounded-2xl border-2 border-slate-300 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-4">
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                                    <span class="px-3 py-1 rounded-full text-xs font-black ${color.bg} ${color.text} border-2 ${color.border}">${hName}</span>
+                                    ${hDept ? `<span class="text-xs font-bold text-slate-600">${hDept}</span>` : ''}
+                                </div>
+                                <h4 class="text-base sm:text-lg font-black text-slate-900 mt-1">${v.reason}</h4>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="text-xs font-black bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl block">${formattedDate}</span>
+                                ${v.time ? `<div class="text-xs font-black text-teal-700 mt-1.5">🕒 ${v.time}</div>` : ''}
+                            </div>
+                        </div>
+
+                        ${v.rehab ? `
+                            <div class="bg-teal-50 border-2 border-teal-200 rounded-xl p-3.5">
+                                <span class="text-xs font-black text-teal-900 flex items-center gap-1.5 mb-1">
+                                    <svg class="w-4 h-4 text-teal-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    リハビリ内容・メニュー
+                                </span>
+                                <p class="text-xs sm:text-sm font-bold text-slate-800 whitespace-pre-wrap">${v.rehab}</p>
+                            </div>
+                        ` : ''}
+
+                        ${v.notes ? `
+                            <div class="text-xs sm:text-sm font-bold text-slate-800 bg-slate-50 p-3 rounded-xl border-2 border-slate-200">
+                                <span class="font-black text-slate-900">メモ：</span>${v.notes}
+                            </div>
+                        ` : ''}
+
+                        <div class="flex justify-end gap-2.5 pt-3 border-t-2 border-slate-200">
+                            <button onclick="openDetailModal('${v.id}')" class="text-xs font-black px-4 py-2 rounded-xl border-2 border-slate-300 text-slate-800 hover:bg-slate-100 transition">詳細・編集</button>
+                            <button onclick="deleteVisit('${v.id}')" class="text-xs font-black px-4 py-2 rounded-xl text-rose-700 hover:bg-rose-100 transition">削除</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function openVisitModal() {
+            if (hospitals.length === 0) {
+                openHospitalModal();
+                return;
+            }
+            document.getElementById('visit-modal-title').innerText = '通院記録の追加';
+            document.getElementById('visit-id').value = '';
+            document.getElementById('visit-form').reset();
+            
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('visit-date').value = todayStr;
+
+            document.getElementById('visit-modal').classList.remove('hidden');
+        }
+
+        function openVisitModalForDate(dateStr) {
+            if (hospitals.length === 0) {
+                openHospitalModal();
+                return;
+            }
+            document.getElementById('visit-modal-title').innerText = '通院記録の追加';
+            document.getElementById('visit-id').value = '';
+            document.getElementById('visit-form').reset();
+            
+            document.getElementById('visit-date').value = dateStr;
+            document.getElementById('visit-modal').classList.remove('hidden');
+        }
+
+        function closeVisitModal() {
+            document.getElementById('visit-modal').classList.add('hidden');
+        }
+
+        function saveVisit(event) {
+            event.preventDefault();
+            const id = document.getElementById('visit-id').value;
+            const hospitalId = document.getElementById('visit-hospital').value;
+            const date = document.getElementById('visit-date').value;
+            const time = document.getElementById('visit-time').value;
+            const reason = document.getElementById('visit-reason').value;
+            const rehab = document.getElementById('visit-rehab').value;
+            const notes = document.getElementById('visit-notes').value;
+
+            let visitObj;
+            if (id) {
+                const index = visits.findIndex(v => v.id === id);
+                if (index !== -1) {
+                    visits[index] = { id, hospitalId, date, time, reason, rehab, notes };
+                    visitObj = visits[index];
+                }
+            } else {
+                visitObj = {
+                    id: 'v_' + Date.now(),
+                    hospitalId,
+                    date,
+                    time,
+                    reason,
+                    rehab,
+                    notes
+                };
+                visits.push(visitObj);
+            }
+
+            saveData();
+            closeVisitModal();
+            render();
+
+            if (webhookUrl) {
+                sendToWebhook(visitObj);
+            }
+        }
+
+        function deleteVisit(id) {
+            if (confirm('この通院記録を削除してもよろしいですか？')) {
+                visits = visits.filter(v => v.id !== id);
+                saveData();
+                closeDetailModal();
+                render();
+            }
+        }
+
+        function openTemplateModal(type) {
+            document.getElementById('template-type').value = type;
+            const titleEl = document.getElementById('template-modal-title');
+            const headingEl = document.getElementById('template-form-heading');
+
+            if (type === 'reason') {
+                titleEl.innerText = 'よく使う通院理由の管理';
+                headingEl.innerText = '新しい通院理由を追加';
+            } else {
+                titleEl.innerText = 'よく使うリハビリメニューの管理';
+                headingEl.innerText = '新しいリハビリメニューを追加';
+            }
+
+            renderTemplateList(type);
+            document.getElementById('template-modal').classList.remove('hidden');
+        }
+
+        function closeTemplateModal() {
+            document.getElementById('template-modal').classList.add('hidden');
+            render();
+        }
+
+        function renderTemplateList(type) {
+            const container = document.getElementById('template-list-container');
+            const list = type === 'reason' ? reasonTemplates : rehabTemplates;
+
+            if (list.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-500 text-center py-4 font-bold">登録されている項目はありません</p>';
+                return;
+            }
+
+            let html = '';
+            list.forEach((item, index) => {
+                html += `
+                    <div class="flex items-center justify-between p-3 bg-white border-2 border-slate-300 rounded-xl shadow-xs">
+                        <span class="text-xs sm:text-sm font-black text-slate-900 truncate pr-2">${item}</span>
+                        <button onclick="deleteTemplate('${type}', ${index})" class="text-rose-700 hover:bg-rose-100 p-2 rounded-xl transition text-xs font-black shrink-0">削除</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function saveTemplate(event) {
+            event.preventDefault();
+            const type = document.getElementById('template-type').value;
+            const text = document.getElementById('new-template-text').value.trim();
+
+            if (!text) return;
+
+            if (type === 'reason') {
+                if (!reasonTemplates.includes(text)) {
+                    reasonTemplates.push(text);
+                }
+            } else {
+                if (!rehabTemplates.includes(text)) {
+                    rehabTemplates.push(text);
+                }
+            }
+
+            saveData();
+            document.getElementById('new-template-text').value = '';
+            renderTemplateList(type);
+            updateTemplateDropdowns();
+        }
+
+        function deleteTemplate(type, index) {
+            if (confirm('この項目を削除してもよろしいですか？')) {
+                if (type === 'reason') {
+                    reasonTemplates.splice(index, 1);
+                } else {
+                    rehabTemplates.splice(index, 1);
+                }
+                saveData();
+                renderTemplateList(type);
+                updateTemplateDropdowns();
+            }
+        }
+
+        function openDetailModal(id) {
+            const v = visits.find(item => item.id === id);
+            if (!v) return;
+
+            const hospital = hospitals.find(h => h.id === v.hospitalId);
+            const hName = hospital ? hospital.name : '不明な病院';
+            const hDept = hospital ? hospital.dept : '';
+            const color = getHospitalColor(v.hospitalId);
+
+            const dateObj = new Date(v.date);
+            const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
+            const formattedDate = `${dateObj.getFullYear()}年${dateObj.getMonth() + 1}月${dateObj.getDate()}日 (${dayOfWeek})`;
+
+            let contentHtml = `
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <span class="px-3.5 py-1.5 rounded-full text-xs font-black ${color.bg} ${color.text} border-2 ${color.border}">${hName} (${hDept})</span>
+                    <span class="text-xs font-black bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl">${formattedDate} ${v.time ? `(${v.time})` : ''}</span>
+                </div>
+                <div>
+                    <span class="text-xs font-black text-slate-500 uppercase tracking-wider">通院理由・診療内容</span>
+                    <h4 class="text-base sm:text-lg font-black text-slate-900 mt-1">${v.reason}</h4>
+                </div>
+            `;
+
+            if (v.rehab) {
+                contentHtml += `
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-2xl p-4">
+                        <span class="text-xs font-black text-teal-900 flex items-center gap-1.5 mb-1.5">
+                            <svg class="w-4 h-4 text-teal-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            リハビリ内容・メニュー
+                        </span>
+                        <p class="text-sm font-bold text-slate-800 whitespace-pre-wrap">${v.rehab}</p>
+                    </div>
+                `;
+            }
+
+            if (v.notes) {
+                contentHtml += `
+                    <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4">
+                        <span class="text-xs font-black text-slate-500 uppercase tracking-wider block mb-1">メモ・指示事項</span>
+                        <p class="text-sm font-bold text-slate-800 whitespace-pre-wrap">${v.notes}</p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('detail-content').innerHTML = contentHtml;
+            document.getElementById('detail-delete-btn').setAttribute('onclick', `deleteVisit('${v.id}')`);
+            document.getElementById('detail-edit-btn').setAttribute('onclick', `closeDetailModal(); editVisit('${v.id}')`);
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        function editVisit(id) {
+            const v = visits.find(item => item.id === id);
+            if (!v) return;
+
+            document.getElementById('visit-modal-title').innerText = '通院記録の編集';
+            document.getElementById('visit-id').value = v.id;
+            document.getElementById('visit-hospital').value = v.hospitalId;
+            document.getElementById('visit-date').value = v.date;
+            document.getElementById('visit-time').value = v.time || '';
+            document.getElementById('visit-reason').value = v.reason;
+            document.getElementById('visit-rehab').value = v.rehab || '';
+            document.getElementById('visit-notes').value = v.notes || '';
+
+            document.getElementById('visit-modal').classList.remove('hidden');
+        }
+
+        function openHospitalModal() {
+            document.getElementById('hospital-modal').classList.remove('hidden');
+            updateHospitalDropdowns();
+        }
+
+        function closeHospitalModal() {
+            document.getElementById('hospital-modal').classList.add('hidden');
+            render();
+        }
+
+        function saveHospital(event) {
+            event.preventDefault();
+            const name = document.getElementById('new-hospital-name').value;
+            const dept = document.getElementById('new-hospital-dept').value;
+
+            const newH = {
+                id: 'h_' + Date.now(),
+                name,
+                dept
+            };
+
+            hospitals.push(newH);
+            saveData();
+
+            document.getElementById('new-hospital-name').value = '';
+            document.getElementById('new-hospital-dept').value = '';
+            updateHospitalDropdowns();
+        }
+
+        function deleteHospital(id) {
+            const inUse = visits.some(v => v.hospitalId === id);
+            if (inUse) {
+                alert('この病院を使用している通院記録が存在するため削除できません。');
+                return;
+            }
+
+            if (confirm('この病院をリストから削除しますか？')) {
+                hospitals = hospitals.filter(h => h.id !== id);
+                saveData();
+                updateHospitalDropdowns();
+            }
+        }
+
+        function openSyncModal() {
+            document.getElementById('sync-modal').classList.remove('hidden');
+        }
+
+        function closeSyncModal() {
+            document.getElementById('sync-modal').classList.add('hidden');
+        }
+
+        function saveWebhookUrl() {
+            webhookUrl = document.getElementById('sync-webhook-url').value.trim();
+            saveData();
+            alert('連携URLを保存しました。');
+        }
+
+        function exportCSV() {
+            let csv = '\uFEFF病院名,診療科,日付,時間,通院理由,リハビリ内容,メモ\n';
+            visits.forEach(v => {
+                const h = hospitals.find(item => item.id === v.hospitalId);
+                const hName = h ? h.name : '';
+                const hDept = h ? h.dept : '';
+                csv += `"${hName}","${hDept}","${v.date}","${v.time || ''}","${(v.reason || '').replace(/"/g, '""')}","${(v.rehab || '').replace(/"/g, '""')}","${(v.notes || '').replace(/"/g, '""')}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `通院履歴_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        async function sendToWebhook(visitObj) {
+            if (!webhookUrl) return;
+            const h = hospitals.find(item => item.id === visitObj.hospitalId);
+            const payload = {
+                hospitalName: h ? h.name : '',
+                department: h ? h.dept : '',
+                date: visitObj.date,
+                time: visitObj.time || '',
+                reason: visitObj.reason,
+                rehab: visitObj.rehab || '',
+                notes: visitObj.notes || ''
+            };
+
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function syncToSheetManually() {
+            if (!webhookUrl) {
+                alert('先にGAS WebアプリのURLを入力・保存してください。');
+                return;
+            }
+            if (confirm('登録されているすべての通院記録をスプレッドシートへ送信しますか？')) {
+                for (const v of visits) {
+                    await sendToWebhook(v);
+                }
+                alert('一括送信が完了しました。スプレッドシートをご確認ください。');
+            }
+        }
+    </script>
+</body>
+</html>
