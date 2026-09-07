@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病院通院履歴管理 v1.2.0</title>
+    <title>病院通院履歴管理 v1.4.0</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Noto Sans JP & Inter Font -->
@@ -39,7 +39,7 @@
 <body class="bg-slate-100 text-slate-900 font-sans min-h-screen flex flex-col antialiased selection:bg-teal-200">
 
     <!-- Global Toast Notification Banner -->
-    <div id="toast-container" class="toast-hide fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-11/12 max-w-md px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border-2 border-slate-900 text-white font-black text-sm sm:text-base">
+    <div id="toast-container" class="toast-hide fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-11/12 max-w-md px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border-2 border-emerald-700 bg-emerald-700 text-white font-black text-sm sm:text-base">
         <div id="toast-icon" class="text-xl shrink-0">✓</div>
         <div id="toast-message" class="flex-1 leading-snug">保存しました</div>
     </div>
@@ -57,7 +57,7 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">通院・リハビリ管理帳</h1>
-                            <span class="text-xs font-black text-white bg-teal-700 px-2 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.2.0</span>
+                            <span class="text-xs font-black text-white bg-teal-700 px-2 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.4.0</span>
                         </div>
                         <p class="text-xs font-bold text-slate-600 mt-0.5">文字くっきり・スマホ最適化版</p>
                     </div>
@@ -73,7 +73,7 @@
             <div class="flex items-center gap-2 w-full sm:w-auto justify-end overflow-x-auto pb-1 sm:pb-0">
                 <button type="button" onclick="openSyncModal()" class="bg-emerald-50 border-2 border-emerald-400 hover:bg-emerald-100 active:scale-95 text-emerald-950 font-black px-3 py-2 rounded-xl text-xs sm:text-sm transition shadow-xs flex items-center gap-1.5 shrink-0">
                     <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    スプレッドシート連携
+                    連携機能
                 </button>
                 <button type="button" onclick="openHospitalModal()" class="bg-white border-2 border-slate-400 hover:bg-slate-100 active:scale-95 text-slate-900 font-black px-3 py-2 rounded-xl text-xs sm:text-sm transition shadow-xs flex items-center gap-1.5 shrink-0">
                     <svg class="w-4 h-4 text-slate-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"></path></svg>
@@ -185,29 +185,41 @@
                     </div>
                 </div>
 
-                <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-xs sm:text-sm font-black text-slate-900">通院理由・診療科・症状 <span class="text-rose-600">*</span></label>
-                        <button type="button" onclick="openTemplateModal('reason')" class="text-xs font-black text-teal-900 hover:text-teal-950 bg-teal-100 hover:bg-teal-200 px-2.5 py-1 rounded-lg transition border border-teal-300">➕ 理由リスト管理</button>
+                <!-- 通院理由セクション（ブルー系で強調） -->
+                <div class="bg-blue-50/80 border-2 border-blue-300 p-3.5 rounded-2xl space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-xs sm:text-sm font-black text-blue-950 flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>
+                            通院理由・診療科・症状 <span class="text-rose-600">*</span>
+                        </label>
+                        <button type="button" onclick="openTemplateModal('reason')" class="text-xs font-black text-blue-950 bg-blue-200 hover:bg-blue-300 px-2.5 py-1 rounded-lg transition border border-blue-400 flex items-center gap-1">
+                            ⚙️ リスト管理
+                        </button>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-2">
-                        <select id="visit-reason-select" onchange="onReasonSelectChange()" class="w-full sm:w-2/5 bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-xs sm:text-sm rounded-xl px-2.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
+                        <select id="visit-reason-select" onchange="onReasonSelectChange()" class="w-full sm:w-2/5 bg-white border-2 border-blue-300 text-slate-900 font-bold text-xs sm:text-sm rounded-xl px-2.5 py-3 outline-none focus:ring-2 focus:ring-blue-600">
                             <option value="">よく使う理由から選択</option>
                         </select>
-                        <input type="text" id="visit-reason" required placeholder="例：定期診察、右膝の痛み" class="flex-1 bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-sm sm:text-base rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
+                        <input type="text" id="visit-reason" required placeholder="例：定期診察、右膝の痛み" class="flex-1 bg-white border-2 border-blue-300 text-slate-900 font-bold text-sm sm:text-base rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-blue-600">
                     </div>
                 </div>
 
-                <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-xs sm:text-sm font-black text-slate-900">リハビリ内容・メニュー</label>
-                        <button type="button" onclick="openTemplateModal('rehab')" class="text-xs font-black text-teal-900 hover:text-teal-950 bg-teal-100 hover:bg-teal-200 px-2.5 py-1 rounded-lg transition border border-teal-300">➕ リハビリ管理</button>
+                <!-- リハビリ内容セクション（オレンジ・アンバー系で強調） -->
+                <div class="bg-amber-50/80 border-2 border-amber-300 p-3.5 rounded-2xl space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-xs sm:text-sm font-black text-amber-950 flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block"></span>
+                            リハビリ内容・メニュー
+                        </label>
+                        <button type="button" onclick="openTemplateModal('rehab')" class="text-xs font-black text-amber-950 bg-amber-200 hover:bg-amber-300 px-2.5 py-1 rounded-lg transition border border-amber-400 flex items-center gap-1">
+                            ⚙️ リスト管理
+                        </button>
                     </div>
                     <div class="flex flex-col sm:flex-row gap-2">
-                        <select id="visit-rehab-select" onchange="onRehabSelectChange()" class="w-full sm:w-2/5 bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-xs sm:text-sm rounded-xl px-2.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
+                        <select id="visit-rehab-select" onchange="onRehabSelectChange()" class="w-full sm:w-2/5 bg-white border-2 border-amber-300 text-slate-900 font-bold text-xs sm:text-sm rounded-xl px-2.5 py-3 outline-none focus:ring-2 focus:ring-amber-600">
                             <option value="">よく使うメニューから選択</option>
                         </select>
-                        <textarea id="visit-rehab" rows="2" placeholder="例：膝の曲げ伸ばし運動、低周波15分" class="flex-1 bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-sm rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600 resize-none"></textarea>
+                        <textarea id="visit-rehab" rows="2" placeholder="例：膝の曲げ伸ばし運動、低周波15分" class="flex-1 bg-white border-2 border-amber-300 text-slate-900 font-bold text-sm rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-amber-600 resize-none"></textarea>
                     </div>
                 </div>
 
@@ -224,10 +236,11 @@
         </div>
     </div>
 
+    <!-- 定型文（理由・リハビリ）管理モーダル -->
     <div id="template-modal" style="display: none;" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl overflow-hidden transform transition-all border-t-4 sm:border-2 border-teal-700">
             <div class="px-5 py-4 border-b-2 border-slate-200 flex justify-between items-center bg-slate-50">
-                <h3 id="template-modal-title" class="font-black text-slate-900 text-base sm:text-lg">よく使う項目の管理</h3>
+                <h3 id="template-modal-title" class="font-black text-slate-900 text-base sm:text-lg">よく使う項目の修正・管理</h3>
                 <button type="button" onclick="closeTemplateModal()" class="text-slate-600 hover:text-slate-900 p-2 rounded-xl hover:bg-slate-200 transition font-black">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -235,11 +248,15 @@
             <div class="p-5 sm:p-6 space-y-4 max-h-[82vh] overflow-y-auto">
                 <form id="template-form" onsubmit="saveTemplate(event)" class="space-y-3 bg-slate-50 p-4 rounded-2xl border-2 border-slate-300">
                     <input type="hidden" id="template-type">
-                    <h4 id="template-form-heading" class="text-xs font-black text-slate-800 uppercase tracking-wider">項目を追加</h4>
+                    <input type="hidden" id="template-edit-index" value="-1">
+                    <div class="flex justify-between items-center">
+                        <h4 id="template-form-heading" class="text-xs font-black text-slate-800 uppercase tracking-wider">項目を追加</h4>
+                        <button type="button" id="template-cancel-edit-btn" onclick="resetTemplateForm()" style="display: none;" class="text-xs font-bold text-slate-600 hover:underline">新規追加に戻る</button>
+                    </div>
                     <div>
                         <input type="text" id="new-template-text" required placeholder="内容を入力" class="w-full bg-white border-2 border-slate-300 text-slate-900 font-bold text-sm rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
                     </div>
-                    <button type="submit" class="w-full bg-teal-700 hover:bg-teal-800 active:scale-95 text-white font-black py-3 rounded-xl text-sm transition shadow">リストに追加保存する</button>
+                    <button type="submit" id="template-submit-btn" class="w-full bg-teal-700 hover:bg-teal-800 active:scale-95 text-white font-black py-3 rounded-xl text-sm transition shadow">リストに追加保存する</button>
                 </form>
 
                 <div>
@@ -252,24 +269,29 @@
         </div>
     </div>
 
+    <!-- 病院管理モーダル -->
     <div id="hospital-modal" style="display: none;" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl overflow-hidden transform transition-all border-t-4 sm:border-2 border-slate-800">
             <div class="px-5 py-4 border-b-2 border-slate-200 flex justify-between items-center bg-slate-50">
-                <h3 class="font-black text-slate-900 text-base sm:text-lg">病院リスト管理</h3>
+                <h3 class="font-black text-slate-900 text-base sm:text-lg">病院リストの修正・管理</h3>
                 <button type="button" onclick="closeHospitalModal()" class="text-slate-600 hover:text-slate-900 p-2 rounded-xl hover:bg-slate-200 transition font-black">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
             <div class="p-5 sm:p-6 space-y-4 max-h-[82vh] overflow-y-auto">
                 <form id="hospital-form" onsubmit="saveHospital(event)" class="space-y-3 bg-slate-50 p-4 rounded-2xl border-2 border-slate-300">
-                    <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider">新しい病院を追加</h4>
+                    <input type="hidden" id="hospital-edit-id" value="">
+                    <div class="flex justify-between items-center">
+                        <h4 id="hospital-form-heading" class="text-xs font-black text-slate-800 uppercase tracking-wider">新しい病院を追加</h4>
+                        <button type="button" id="hospital-cancel-edit-btn" onclick="resetHospitalForm()" style="display: none;" class="text-xs font-bold text-slate-600 hover:underline">新規追加に戻る</button>
+                    </div>
                     <div>
                         <input type="text" id="new-hospital-name" required placeholder="病院名（例：〇〇整形外科）" class="w-full bg-white border-2 border-slate-300 text-slate-900 font-bold text-sm rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
                     </div>
                     <div>
                         <input type="text" id="new-hospital-dept" placeholder="主な診療科（例：整形外科・リハビリ科）" class="w-full bg-white border-2 border-slate-300 text-slate-900 font-bold text-sm rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
                     </div>
-                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-black py-3 rounded-xl text-sm transition shadow">病院を登録保存する</button>
+                    <button type="submit" id="hospital-submit-btn" class="w-full bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-black py-3 rounded-xl text-sm transition shadow">病院を登録保存する</button>
                 </form>
 
                 <div>
@@ -278,16 +300,11 @@
                         <!-- Javascript injects hospital list -->
                     </div>
                 </div>
-
-                <div class="pt-3 border-t-2 border-slate-200">
-                    <button type="button" onclick="confirmResetAllData()" class="w-full text-xs font-bold text-rose-800 hover:bg-rose-50 border border-rose-400 p-2.5 rounded-xl transition">
-                        ⚠️ 過去の通院記録データを全初期化
-                    </button>
-                </div>
             </div>
         </div>
     </div>
 
+    <!-- スプレッドシート連携モーダル -->
     <div id="sync-modal" style="display: none;" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden transform transition-all border-t-4 sm:border-2 border-emerald-600">
             <div class="px-5 py-4 border-b-2 border-slate-200 flex justify-between items-center bg-emerald-50">
@@ -301,12 +318,9 @@
             </div>
             <div class="p-5 sm:p-6 space-y-4 max-h-[82vh] overflow-y-auto">
                 <div class="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-4 text-xs sm:text-sm text-slate-900 space-y-2 font-bold">
-                    <p>💡 <span class="text-emerald-950 font-black">スプレッドシート設定のポイント</span></p>
+                    <p>💡 <span class="text-emerald-950 font-black">スプレッドシートへの自動転記について</span></p>
                     <p class="font-medium text-slate-800 leading-relaxed">
-                        スプレッドシートのタイトル名おすすめ：<br>
-                        <code class="bg-white px-2 py-0.5 rounded border border-emerald-300 font-black text-emerald-900">病院通院・リハビリ履歴管理</code><br><br>
-                        1行目のヘッダー項目（左から順に手打ち入力）：<br>
-                        <span class="text-xs text-slate-900 font-mono font-bold">登録日時 | 病院名 | 診療科 | 通院日 | 時間 | 通院理由 | リハビリ内容 | メモ</span>
+                        Google Apps Script (GAS) のURLを設定すると、保存時に自動でスプレッドシートへ送信します。また、CSV形式でダウンロードすることも可能です。
                     </p>
                 </div>
 
@@ -333,6 +347,7 @@
         </div>
     </div>
 
+    <!-- 詳細確認・編集モーダル -->
     <div id="detail-modal" style="display: none;" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden transform transition-all border-t-4 sm:border-2 border-slate-800">
             <div class="px-5 py-4 border-b-2 border-slate-200 flex justify-between items-center bg-slate-50">
@@ -354,17 +369,17 @@
         </div>
     </div>
 
-    <!-- Alert Modal -->
+    <!-- Alert Modal (For crucial messages like Save Success/Error) -->
     <div id="alert-modal" style="display: none;" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-[80] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border-2 border-emerald-600">
             <div id="alert-icon-box" class="w-12 h-12 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto text-2xl font-black">✓</div>
             <h4 id="alert-title" class="text-base sm:text-lg font-black text-slate-900">保存しました</h4>
-            <p id="alert-message" class="text-xs sm:text-sm font-bold text-slate-700">スプレッドシートにデータを保存しました。</p>
+            <p id="alert-message" class="text-xs sm:text-sm font-bold text-slate-700">データを正常に保存しました。</p>
             <button type="button" onclick="closeAlertModal()" class="w-full bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-black py-3 rounded-xl text-sm transition shadow">OK</button>
         </div>
     </div>
 
-    <!-- Confirm Modal -->
+    <!-- Confirm Modal (For Delete Actions) -->
     <div id="confirm-modal" style="display: none;" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-[80] flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border-2 border-slate-700">
             <div class="w-12 h-12 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center mx-auto text-xl font-black">?</div>
@@ -378,7 +393,7 @@
     </div>
 
     <script>
-        // Data State Variables
+        // Data Storage Variables
         let hospitals = [];
         let visits = [];
         let reasonTemplates = [
@@ -396,18 +411,17 @@
         let webhookUrl = '';
 
         let currentYear = 2026;
-        let currentMonth = 8; // September (0-indexed)
+        let currentMonth = 8;
         let currentView = 'calendar';
         let confirmCallback = null;
         let toastTimeout = null;
 
-        // Visual Palette for Hospitals
         const hospitalColors = [
-            { bg: 'bg-teal-100', text: 'text-teal-950', border: 'border-teal-400', dot: 'bg-teal-700' },
-            { bg: 'bg-indigo-100', text: 'text-indigo-950', border: 'border-indigo-400', dot: 'bg-indigo-700' },
-            { bg: 'bg-amber-100', text: 'text-amber-950', border: 'border-amber-400', dot: 'bg-amber-700' },
-            { bg: 'bg-rose-100', text: 'text-rose-950', border: 'border-rose-400', dot: 'bg-rose-700' },
-            { bg: 'bg-sky-100', text: 'text-sky-950', border: 'border-sky-400', dot: 'bg-sky-700' },
+            { bg: 'bg-teal-100', text: 'text-teal-950', border: 'border-teal-400' },
+            { bg: 'bg-indigo-100', text: 'text-indigo-950', border: 'border-indigo-400' },
+            { bg: 'bg-amber-100', text: 'text-amber-950', border: 'border-amber-400' },
+            { bg: 'bg-rose-100', text: 'text-rose-950', border: 'border-rose-400' },
+            { bg: 'bg-sky-100', text: 'text-sky-950', border: 'border-sky-400' },
         ];
 
         function getHospitalColor(hospitalId) {
@@ -416,59 +430,22 @@
             return hospitalColors[index % hospitalColors.length];
         }
 
-        // Dedicated Separate Storage Functions (Prevents Data Overwrite)
-        function saveHospitalsOnly() {
-            try {
-                localStorage.setItem('hospital_tracker_hospitals', JSON.stringify(hospitals));
-                return true;
-            } catch (e) {
-                console.error('Failed to save hospitals', e);
-                return false;
-            }
-        }
-
-        function saveVisitsOnly() {
-            try {
-                localStorage.setItem('hospital_tracker_visits', JSON.stringify(visits));
-                return true;
-            } catch (e) {
-                console.error('Failed to save visits', e);
-                return false;
-            }
-        }
-
+        // LocalStorage Save Functions
+        function saveHospitalsOnly() { localStorage.setItem('hospital_tracker_hospitals', JSON.stringify(hospitals)); }
+        function saveVisitsOnly() { localStorage.setItem('hospital_tracker_visits', JSON.stringify(visits)); }
         function saveTemplatesOnly() {
-            try {
-                localStorage.setItem('hospital_tracker_reasons', JSON.stringify(reasonTemplates));
-                localStorage.setItem('hospital_tracker_rehabs', JSON.stringify(rehabTemplates));
-                return true;
-            } catch (e) {
-                console.error('Failed to save templates', e);
-                return false;
-            }
+            localStorage.setItem('hospital_tracker_reasons', JSON.stringify(reasonTemplates));
+            localStorage.setItem('hospital_tracker_rehabs', JSON.stringify(rehabTemplates));
         }
+        function saveWebhookOnly() { localStorage.setItem('hospital_tracker_webhook', webhookUrl); }
 
-        function saveWebhookOnly() {
-            try {
-                localStorage.setItem('hospital_tracker_webhook', webhookUrl);
-                return true;
-            } catch (e) {
-                console.error('Failed to save webhook', e);
-                return false;
-            }
-        }
-
-        // Notification Toast Handler
+        // --- Alert & Notification System ---
         function showToast(message, isSuccess = true) {
             const container = document.getElementById('toast-container');
             const icon = document.getElementById('toast-icon');
             const msgEl = document.getElementById('toast-message');
 
-            if (!container) return;
-
-            if (toastTimeout) {
-                clearTimeout(toastTimeout);
-            }
+            if (toastTimeout) clearTimeout(toastTimeout);
 
             if (isSuccess) {
                 container.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-11/12 max-w-md px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border-2 border-emerald-700 bg-emerald-700 text-white font-black text-sm sm:text-base toast-show';
@@ -479,14 +456,12 @@
             }
 
             msgEl.innerText = message;
-
             toastTimeout = setTimeout(() => {
                 container.classList.remove('toast-show');
                 container.classList.add('toast-hide');
-            }, 3000);
+            }, 3500);
         }
 
-        // Modal Dialog Alert
         function showAlert(title, message, isSuccess = true) {
             const modal = document.getElementById('alert-modal');
             const titleEl = document.getElementById('alert-title');
@@ -503,34 +478,25 @@
                 iconEl.className = 'w-12 h-12 bg-rose-100 text-rose-800 rounded-full flex items-center justify-center mx-auto text-2xl font-black';
                 iconEl.innerText = '✕';
             }
-
             modal.style.display = 'flex';
         }
 
-        function closeAlertModal() {
-            document.getElementById('alert-modal').style.display = 'none';
-        }
+        function closeAlertModal() { document.getElementById('alert-modal').style.display = 'none'; }
 
-        // Modal Dialog Confirmation
         function showConfirm(title, message, onOk) {
             document.getElementById('confirm-title').innerText = title;
             document.getElementById('confirm-message').innerText = message;
             confirmCallback = onOk;
-            document.getElementById('confirm-ok-btn').onclick = function() {
-                closeConfirmModal(true);
-            };
             document.getElementById('confirm-modal').style.display = 'flex';
         }
 
         function closeConfirmModal(confirmed) {
             document.getElementById('confirm-modal').style.display = 'none';
-            if (confirmed && typeof confirmCallback === 'function') {
-                confirmCallback();
-            }
+            if (confirmed && typeof confirmCallback === 'function') confirmCallback();
             confirmCallback = null;
         }
+        // -----------------------------------
 
-        // Application Initialization
         window.onload = function() {
             try {
                 const storedHospitals = localStorage.getItem('hospital_tracker_hospitals');
@@ -552,11 +518,9 @@
                 const today = new Date();
                 currentYear = today.getFullYear();
                 currentMonth = today.getMonth();
-
                 render();
             } catch (err) {
-                console.error('Initialization error', err);
-                showAlert('エラー', '初期データの読み込みに失敗しました。', false);
+                showAlert('エラー', 'データの読み込みに失敗しました。', false);
             }
         };
 
@@ -583,13 +547,8 @@
 
         function changeMonth(direction) {
             currentMonth += direction;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            } else if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; } 
+            else if (currentMonth < 0) { currentMonth = 11; currentYear--; }
             render();
         }
 
@@ -597,97 +556,71 @@
             document.getElementById('current-month-label').innerText = `${currentYear}年${currentMonth + 1}月`;
             updateHospitalDropdowns();
             updateTemplateDropdowns();
-
-            if (currentView === 'calendar') {
-                renderCalendar();
-            } else {
-                renderList();
-            }
+            if (currentView === 'calendar') renderCalendar();
+            else renderList();
         }
 
         function escapeHtml(str) {
             if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
         function updateTemplateDropdowns() {
             const reasonSelect = document.getElementById('visit-reason-select');
             let reasonHtml = '<option value="">よく使う理由から選択</option>';
-            reasonTemplates.forEach(r => {
-                reasonHtml += `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`;
-            });
+            reasonTemplates.forEach(r => { reasonHtml += `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`; });
             reasonSelect.innerHTML = reasonHtml;
 
             const rehabSelect = document.getElementById('visit-rehab-select');
             let rehabHtml = '<option value="">よく使うメニューから選択</option>';
-            rehabTemplates.forEach(r => {
-                rehabHtml += `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`;
-            });
+            rehabTemplates.forEach(r => { rehabHtml += `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`; });
             rehabSelect.innerHTML = rehabHtml;
         }
 
         function onReasonSelectChange() {
             const val = document.getElementById('visit-reason-select').value;
-            if (val) {
-                document.getElementById('visit-reason').value = val;
-            }
+            if (val) document.getElementById('visit-reason').value = val;
         }
 
         function onRehabSelectChange() {
             const val = document.getElementById('visit-rehab-select').value;
-            if (val) {
-                document.getElementById('visit-rehab').value = val;
-            }
+            if (val) document.getElementById('visit-rehab').value = val;
         }
 
         function updateHospitalDropdowns() {
             const filterSelect = document.getElementById('hospital-filter');
             const visitSelect = document.getElementById('visit-hospital');
-            const hospitalListContainer = document.getElementById('hospital-list-container');
-
+            const listContainer = document.getElementById('hospital-list-container');
             const currentFilter = filterSelect.value;
             const currentVisitHospital = visitSelect.value;
 
             let filterHtml = '<option value="">すべての病院</option>';
-            hospitals.forEach(h => {
-                filterHtml += `<option value="${h.id}" ${currentFilter === h.id ? 'selected' : ''}>${escapeHtml(h.name)}</option>`;
-            });
+            hospitals.forEach(h => { filterHtml += `<option value="${h.id}" ${currentFilter === h.id ? 'selected' : ''}>${escapeHtml(h.name)}</option>`; });
             filterSelect.innerHTML = filterHtml;
 
-            let visitHtml = '';
-            if (hospitals.length === 0) {
-                visitHtml = '<option value="">（病院を登録してください）</option>';
-            } else {
-                hospitals.forEach(h => {
-                    visitHtml += `<option value="${h.id}" ${currentVisitHospital === h.id ? 'selected' : ''}>${escapeHtml(h.name)} (${escapeHtml(h.dept || '診療科なし')})</option>`;
-                });
-            }
+            let visitHtml = hospitals.length === 0 ? '<option value="">（病院を登録してください）</option>' : '';
+            hospitals.forEach(h => { visitHtml += `<option value="${h.id}" ${currentVisitHospital === h.id ? 'selected' : ''}>${escapeHtml(h.name)} (${escapeHtml(h.dept || '診療科なし')})</option>`; });
             visitSelect.innerHTML = visitHtml;
 
             if (hospitals.length === 0) {
-                hospitalListContainer.innerHTML = '<p class="text-xs text-slate-600 text-center py-4 font-bold">病院が登録されていません</p>';
+                listContainer.innerHTML = '<p class="text-xs text-slate-600 text-center py-4 font-bold">病院が登録されていません</p>';
             } else {
                 let listHtml = '';
                 hospitals.forEach(h => {
                     listHtml += `
-                        <div class="flex items-center justify-between p-3.5 bg-white border-2 border-slate-300 rounded-xl shadow-xs">
-                            <div class="truncate pr-2">
+                        <div class="flex items-center justify-between p-3.5 bg-white border-2 border-slate-300 rounded-xl shadow-xs gap-2">
+                            <div class="truncate flex-1">
                                 <h5 class="text-sm font-black text-slate-900 truncate">${escapeHtml(h.name)}</h5>
                                 <p class="text-xs font-bold text-slate-700 truncate">${escapeHtml(h.dept || '診療科未設定')}</p>
                             </div>
-                            <button type="button" onclick="deleteHospital('${h.id}')" class="text-rose-700 hover:bg-rose-100 active:scale-95 p-2 rounded-xl transition text-xs font-black flex items-center gap-1 shrink-0">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                削除
-                            </button>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button type="button" onclick="startEditHospital('${h.id}')" class="text-teal-800 bg-teal-100 hover:bg-teal-200 active:scale-95 px-2.5 py-1.5 rounded-lg transition text-xs font-black">✏️ 修正</button>
+                                <button type="button" onclick="deleteHospital('${h.id}')" class="text-rose-700 hover:bg-rose-100 active:scale-95 p-1.5 rounded-lg transition text-xs font-black">🗑️ 削除</button>
+                            </div>
                         </div>
                     `;
                 });
-                hospitalListContainer.innerHTML = listHtml;
+                listContainer.innerHTML = listHtml;
             }
         }
 
@@ -701,78 +634,47 @@
             const prevDaysInMonth = new Date(currentYear, currentMonth, 0).getDate();
 
             let html = '';
+            const filteredVisits = visits.filter(v => hospitalFilter ? v.hospitalId === hospitalFilter : true);
 
-            const filteredVisits = visits.filter(v => {
-                if (hospitalFilter && v.hospitalId !== hospitalFilter) return false;
-                return true;
-            });
-
-            // Trailing days from previous month
             for (let i = firstDayIndex - 1; i >= 0; i--) {
-                const dayNum = prevDaysInMonth - i;
-                html += `
-                    <div class="bg-slate-200/70 min-h-[105px] p-2 text-slate-400 flex flex-col justify-between">
-                        <span class="text-xs font-bold">${dayNum}</span>
-                    </div>
-                `;
+                html += `<div class="bg-slate-200/70 min-h-[105px] p-2 text-slate-400 flex flex-col justify-between"><span class="text-xs font-bold">${prevDaysInMonth - i}</span></div>`;
             }
 
             const today = new Date();
             const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-            // Current month days
             for (let day = 1; day <= daysInMonth; day++) {
-                const monthStr = String(currentMonth + 1).padStart(2, '0');
-                const dayStr = String(day).padStart(2, '0');
-                const dateString = `${currentYear}-${monthStr}-${dayStr}`;
+                const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const isToday = (dateString === todayStr);
-
                 const dayVisits = filteredVisits.filter(v => v.date === dateString);
 
                 html += `
                     <div class="bg-white min-h-[120px] p-1.5 sm:p-2 flex flex-col justify-between transition hover:bg-slate-50">
                         <div class="flex justify-between items-center">
                             <span class="text-xs sm:text-sm font-black ${isToday ? 'bg-teal-700 text-white w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center shadow' : 'text-slate-900'}">${day}</span>
-                            <button type="button" onclick="openVisitModalForDate('${dateString}')" class="text-teal-700 hover:bg-teal-100 active:scale-95 p-1 rounded-lg transition font-black text-xs flex items-center" title="この日に記録を追加">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
-                            </button>
+                            <button type="button" onclick="openVisitModalForDate('${dateString}')" class="text-teal-700 hover:bg-teal-100 active:scale-95 p-1 rounded-lg transition font-black text-xs flex items-center" title="記録を追加"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg></button>
                         </div>
                         <div class="flex-1 overflow-y-auto space-y-1.5 mt-1.5 max-h-[95px] pr-0.5">
                 `;
 
                 dayVisits.forEach(v => {
-                    const hospital = hospitals.find(h => h.id === v.hospitalId);
-                    const hName = hospital ? hospital.name : '病院';
+                    const h = hospitals.find(h => h.id === v.hospitalId);
                     const color = getHospitalColor(v.hospitalId);
-
                     html += `
                         <div onclick="openDetailModal('${v.id}')" class="${color.bg} ${color.text} border-2 ${color.border} rounded-xl p-1.5 text-xs cursor-pointer hover:shadow active:scale-95 transition">
-                            <div class="flex items-center justify-between font-black gap-1">
-                                <span class="truncate">${escapeHtml(hName)}</span>
-                                ${v.time ? `<span class="text-[10px] sm:text-[11px] font-black px-1 rounded bg-white/80 shrink-0">${v.time}</span>` : ''}
-                            </div>
+                            <div class="flex items-center justify-between font-black gap-1"><span class="truncate">${escapeHtml(h ? h.name : '病院')}</span>${v.time ? `<span class="text-[10px] sm:text-[11px] font-black px-1 rounded bg-white/80 shrink-0">${v.time}</span>` : ''}</div>
                             <div class="text-[11px] font-bold truncate opacity-90 mt-0.5">${escapeHtml(v.reason)}</div>
                         </div>
                     `;
                 });
-
-                html += `
-                        </div>
-                    </div>
-                `;
+                html += `</div></div>`;
             }
 
-            // Next month leading days
             const totalCellsSoFar = firstDayIndex + daysInMonth;
             const remainingCells = totalCellsSoFar % 7 === 0 ? 0 : 7 - (totalCellsSoFar % 7);
             for (let day = 1; day <= remainingCells; day++) {
-                html += `
-                    <div class="bg-slate-200/70 min-h-[105px] p-2 text-slate-400 flex flex-col justify-between">
-                        <span class="text-xs font-bold">${day}</span>
-                    </div>
-                `;
+                html += `<div class="bg-slate-200/70 min-h-[105px] p-2 text-slate-400 flex flex-col justify-between"><span class="text-xs font-bold">${day}</span></div>`;
             }
-
             grid.innerHTML = html;
         }
 
@@ -781,11 +683,7 @@
             const emptyState = document.getElementById('empty-state');
             const hospitalFilter = document.getElementById('hospital-filter').value;
 
-            let filteredVisits = visits.filter(v => {
-                if (hospitalFilter && v.hospitalId !== hospitalFilter) return false;
-                return true;
-            });
-
+            let filteredVisits = visits.filter(v => hospitalFilter ? v.hospitalId === hospitalFilter : true);
             filteredVisits.sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (filteredVisits.length === 0) {
@@ -795,31 +693,21 @@
             }
 
             emptyState.style.display = 'none';
-
             let html = '';
             filteredVisits.forEach(v => {
-                const hospital = hospitals.find(h => h.id === v.hospitalId);
-                const hName = hospital ? hospital.name : '未設定の病院';
-                const hDept = hospital ? hospital.dept : '';
+                const h = hospitals.find(h => h.id === v.hospitalId);
                 const color = getHospitalColor(v.hospitalId);
-
-                const dateParts = v.date.split('-');
-                const year = dateParts[0];
-                const month = dateParts[1];
-                const day = dateParts[2];
-                const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
-                const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
-                const formattedDate = `${year}年${month}月${day}日 (${dayOfWeek})`;
+                const dateObj = new Date(v.date);
+                const formattedDate = `${dateObj.getFullYear()}年${dateObj.getMonth()+1}月${dateObj.getDate()}日 (${['日','月','火','水','木','金','土'][dateObj.getDay()]})`;
 
                 html += `
-                    <div class="bg-white rounded-2xl border-2 border-slate-300 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-4">
+                    <div class="bg-white rounded-2xl border-2 border-slate-300 p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-3.5">
                         <div class="flex items-start justify-between gap-2">
                             <div>
                                 <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                                    <span class="px-3 py-1 rounded-full text-xs font-black ${color.bg} ${color.text} border-2 ${color.border}">${escapeHtml(hName)}</span>
-                                    ${hDept ? `<span class="text-xs font-bold text-slate-700">${escapeHtml(hDept)}</span>` : ''}
+                                    <span class="px-3 py-1 rounded-full text-xs font-black ${color.bg} ${color.text} border-2 ${color.border}">${escapeHtml(h ? h.name : '')}</span>
+                                    ${h && h.dept ? `<span class="text-xs font-bold text-slate-700">${escapeHtml(h.dept)}</span>` : ''}
                                 </div>
-                                <h4 class="text-base sm:text-lg font-black text-slate-900 mt-1">${escapeHtml(v.reason)}</h4>
                             </div>
                             <div class="text-right shrink-0">
                                 <span class="text-xs font-black bg-slate-200 text-slate-900 px-3 py-1.5 rounded-xl block">${formattedDate}</span>
@@ -827,68 +715,55 @@
                             </div>
                         </div>
 
+                        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-3">
+                            <span class="text-[11px] font-black text-blue-950 flex items-center gap-1 mb-0.5"><span class="w-2 h-2 rounded-full bg-blue-600 inline-block"></span>通院理由・診療科</span>
+                            <h4 class="text-sm sm:text-base font-black text-slate-900">${escapeHtml(v.reason)}</h4>
+                        </div>
+
                         ${v.rehab ? `
-                            <div class="bg-teal-50 border-2 border-teal-200 rounded-xl p-3.5">
-                                <span class="text-xs font-black text-teal-950 flex items-center gap-1.5 mb-1">
-                                    <svg class="w-4 h-4 text-teal-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                    リハビリ内容・メニュー
-                                </span>
+                            <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-3">
+                                <span class="text-[11px] font-black text-amber-950 flex items-center gap-1.5 mb-1"><span class="w-2 h-2 rounded-full bg-amber-600 inline-block"></span>リハビリ内容・メニュー</span>
                                 <p class="text-xs sm:text-sm font-bold text-slate-900 whitespace-pre-wrap">${escapeHtml(v.rehab)}</p>
                             </div>
                         ` : ''}
 
-                        ${v.notes ? `
-                            <div class="text-xs sm:text-sm font-bold text-slate-900 bg-slate-50 p-3 rounded-xl border-2 border-slate-200">
-                                <span class="font-black text-slate-900">メモ：</span>${escapeHtml(v.notes)}
-                            </div>
-                        ` : ''}
+                        ${v.notes ? `<div class="text-xs sm:text-sm font-bold text-slate-900 bg-slate-50 p-2.5 rounded-xl border-2 border-slate-200"><span class="font-black text-slate-900">メモ：</span>${escapeHtml(v.notes)}</div>` : ''}
 
-                        <div class="flex justify-end gap-2.5 pt-3 border-t-2 border-slate-200">
+                        <div class="flex justify-end gap-2.5 pt-2.5 border-t-2 border-slate-200">
                             <button type="button" onclick="openDetailModal('${v.id}')" class="text-xs font-black px-4 py-2 rounded-xl border-2 border-slate-300 text-slate-800 hover:bg-slate-100 active:scale-95 transition">詳細・編集</button>
                             <button type="button" onclick="deleteVisit('${v.id}')" class="text-xs font-black px-4 py-2 rounded-xl text-rose-700 hover:bg-rose-100 active:scale-95 transition">削除</button>
                         </div>
                     </div>
                 `;
             });
-
             container.innerHTML = html;
         }
 
+        // --- Visit Methods ---
         function openVisitModal() {
             if (hospitals.length === 0) {
-                showAlert('病院の登録が必要です', '先に対象の病院を「病院管理」から追加してください。', false);
-                openHospitalModal();
-                return;
+                showAlert('病院の登録が必要です', '先に「病院管理」から病院を追加してください。', false);
+                openHospitalModal(); return;
             }
             document.getElementById('visit-modal-title').innerText = '通院記録の追加';
             document.getElementById('visit-id').value = '';
             document.getElementById('visit-form').reset();
-            
-            const today = new Date();
-            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            document.getElementById('visit-date').value = todayStr;
-
+            document.getElementById('visit-date').value = new Date().toISOString().split('T')[0];
             document.getElementById('visit-modal').style.display = 'flex';
         }
-
         function openVisitModalForDate(dateStr) {
             if (hospitals.length === 0) {
-                showAlert('病院の登録が必要です', '先に対象の病院を「病院管理」から追加してください。', false);
-                openHospitalModal();
-                return;
+                showAlert('病院の登録が必要です', '先に「病院管理」から病院を追加してください。', false);
+                openHospitalModal(); return;
             }
             document.getElementById('visit-modal-title').innerText = '通院記録の追加';
             document.getElementById('visit-id').value = '';
             document.getElementById('visit-form').reset();
-            
             document.getElementById('visit-date').value = dateStr;
             document.getElementById('visit-modal').style.display = 'flex';
         }
-
-        function closeVisitModal() {
-            document.getElementById('visit-modal').style.display = 'none';
-        }
-
+        function closeVisitModal() { document.getElementById('visit-modal').style.display = 'none'; }
+        
         async function saveVisit(event) {
             event.preventDefault();
             try {
@@ -900,220 +775,51 @@
                 const rehab = document.getElementById('visit-rehab').value.trim();
                 const notes = document.getElementById('visit-notes').value.trim();
 
-                if (!hospitalId || !date || !reason) {
-                    showAlert('入力エラー', '病院、通院日、通院理由は必須項目です。', false);
-                    return;
-                }
+                if (!hospitalId || !date || !reason) { showAlert('入力エラー', '必須項目を入力してください。', false); return; }
 
                 let visitObj;
                 if (id) {
-                    const index = visits.findIndex(v => v.id === id);
-                    if (index !== -1) {
-                        visits[index] = { id, hospitalId, date, time, reason, rehab, notes };
-                        visitObj = visits[index];
-                    }
+                    const i = visits.findIndex(v => v.id === id);
+                    if (i !== -1) { visits[i] = { id, hospitalId, date, time, reason, rehab, notes }; visitObj = visits[i]; }
                 } else {
-                    visitObj = {
-                        id: 'v_' + Date.now(),
-                        hospitalId,
-                        date,
-                        time,
-                        reason,
-                        rehab,
-                        notes
-                    };
+                    visitObj = { id: 'v_' + Date.now(), hospitalId, date, time, reason, rehab, notes };
                     visits.push(visitObj);
                 }
 
-                const saved = saveVisitsOnly();
-                if (!saved) {
-                    showAlert('エラー', '通院記録を保存できませんでした。容量をご確認ください。', false);
-                    return;
-                }
-
+                saveVisitsOnly();
                 closeVisitModal();
                 render();
 
                 if (webhookUrl) {
-                    showToast('通院記録を保存中...スプレッドシート送信中');
+                    showToast('通院記録を保存中...スプレッドシートへ送信しています');
                     await sendToWebhook(visitObj);
                 } else {
                     showToast('通院記録を保存しました！');
                     showAlert('保存完了', '通院記録を正常に保存しました。');
                 }
             } catch (err) {
-                console.error(err);
-                showAlert('エラー', '保存処理中にエラーが発生しました: ' + err.message, false);
+                showToast('保存できませんでした', false);
+                showAlert('エラー', '保存中にエラーが発生しました。', false);
             }
         }
-
+        
         function deleteVisit(id) {
-            showConfirm('通院記録の削除', 'この通院記録を削除してもよろしいですか？', function() {
+            showConfirm('通院記録の削除', 'この記録を削除してもよろしいですか？', function() {
                 try {
                     visits = visits.filter(v => v.id !== id);
                     saveVisitsOnly();
                     closeDetailModal();
                     render();
                     showToast('通院記録を削除しました');
-                    showAlert('削除完了', '通院記録を削除しました。');
                 } catch (e) {
-                    showAlert('エラー', '削除に失敗しました。', false);
+                    showToast('削除できませんでした', false);
                 }
             });
         }
-
-        function openTemplateModal(type) {
-            document.getElementById('template-type').value = type;
-            const titleEl = document.getElementById('template-modal-title');
-            const headingEl = document.getElementById('template-form-heading');
-
-            if (type === 'reason') {
-                titleEl.innerText = 'よく使う通院理由の管理';
-                headingEl.innerText = '新しい通院理由を追加';
-            } else {
-                titleEl.innerText = 'よく使うリハビリメニューの管理';
-                headingEl.innerText = '新しいリハビリメニューを追加';
-            }
-
-            renderTemplateList(type);
-            document.getElementById('template-modal').style.display = 'flex';
-        }
-
-        function closeTemplateModal() {
-            document.getElementById('template-modal').style.display = 'none';
-            render();
-        }
-
-        function renderTemplateList(type) {
-            const container = document.getElementById('template-list-container');
-            const list = type === 'reason' ? reasonTemplates : rehabTemplates;
-
-            if (list.length === 0) {
-                container.innerHTML = '<p class="text-xs text-slate-500 text-center py-4 font-bold">登録されている項目はありません</p>';
-                return;
-            }
-
-            let html = '';
-            list.forEach((item, index) => {
-                html += `
-                    <div class="flex items-center justify-between p-3 bg-white border-2 border-slate-300 rounded-xl shadow-xs">
-                        <span class="text-xs sm:text-sm font-black text-slate-900 truncate pr-2">${escapeHtml(item)}</span>
-                        <button type="button" onclick="deleteTemplate('${type}', ${index})" class="text-rose-700 hover:bg-rose-100 active:scale-95 p-2 rounded-xl transition text-xs font-black shrink-0">削除</button>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        function saveTemplate(event) {
-            event.preventDefault();
-            try {
-                const type = document.getElementById('template-type').value;
-                const text = document.getElementById('new-template-text').value.trim();
-
-                if (!text) {
-                    showAlert('入力エラー', '内容を入力してください。', false);
-                    return;
-                }
-
-                if (type === 'reason') {
-                    if (!reasonTemplates.includes(text)) reasonTemplates.push(text);
-                } else {
-                    if (!rehabTemplates.includes(text)) rehabTemplates.push(text);
-                }
-
-                saveTemplatesOnly();
-                document.getElementById('new-template-text').value = '';
-                renderTemplateList(type);
-                updateTemplateDropdowns();
-                showToast('リスト項目を保存しました！');
-            } catch (e) {
-                showAlert('エラー', '保存できませんでした。', false);
-            }
-        }
-
-        function deleteTemplate(type, index) {
-            showConfirm('項目の削除', 'この項目を削除してもよろしいですか？', function() {
-                try {
-                    if (type === 'reason') {
-                        reasonTemplates.splice(index, 1);
-                    } else {
-                        rehabTemplates.splice(index, 1);
-                    }
-                    saveTemplatesOnly();
-                    renderTemplateList(type);
-                    updateTemplateDropdowns();
-                    showToast('項目を削除しました');
-                } catch (e) {
-                    showAlert('エラー', '削除できませんでした。', false);
-                }
-            });
-        }
-
-        function openDetailModal(id) {
-            const v = visits.find(item => item.id === id);
-            if (!v) return;
-
-            const hospital = hospitals.find(h => h.id === v.hospitalId);
-            const hName = hospital ? hospital.name : '未設定の病院';
-            const hDept = hospital ? hospital.dept : '';
-            const color = getHospitalColor(v.hospitalId);
-
-            const dateParts = v.date.split('-');
-            const year = dateParts[0];
-            const month = dateParts[1];
-            const day = dateParts[2];
-            const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
-            const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
-            const formattedDate = `${year}年${month}月${day}日 (${dayOfWeek})`;
-
-            let contentHtml = `
-                <div class="flex items-center justify-between flex-wrap gap-2">
-                    <span class="px-3.5 py-1.5 rounded-full text-xs font-black ${color.bg} ${color.text} border-2 ${color.border}">${escapeHtml(hName)} (${escapeHtml(hDept)})</span>
-                    <span class="text-xs font-black bg-slate-200 text-slate-900 px-3 py-1.5 rounded-xl">${formattedDate} ${v.time ? `(${v.time})` : ''}</span>
-                </div>
-                <div>
-                    <span class="text-xs font-black text-slate-600 uppercase tracking-wider">通院理由・診療内容</span>
-                    <h4 class="text-base sm:text-lg font-black text-slate-900 mt-1">${escapeHtml(v.reason)}</h4>
-                </div>
-            `;
-
-            if (v.rehab) {
-                contentHtml += `
-                    <div class="bg-teal-50 border-2 border-teal-200 rounded-2xl p-4">
-                        <span class="text-xs font-black text-teal-950 flex items-center gap-1.5 mb-1.5">
-                            <svg class="w-4 h-4 text-teal-700" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            リハビリ内容・メニュー
-                        </span>
-                        <p class="text-sm font-bold text-slate-900 whitespace-pre-wrap">${escapeHtml(v.rehab)}</p>
-                    </div>
-                `;
-            }
-
-            if (v.notes) {
-                contentHtml += `
-                    <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4">
-                        <span class="text-xs font-black text-slate-600 uppercase tracking-wider block mb-1">メモ・指示事項</span>
-                        <p class="text-sm font-bold text-slate-900 whitespace-pre-wrap">${escapeHtml(v.notes)}</p>
-                    </div>
-                `;
-            }
-
-            document.getElementById('detail-content').innerHTML = contentHtml;
-            document.getElementById('detail-delete-btn').onclick = function() { deleteVisit(v.id); };
-            document.getElementById('detail-edit-btn').onclick = function() { closeDetailModal(); editVisit(v.id); };
-
-            document.getElementById('detail-modal').style.display = 'flex';
-        }
-
-        function closeDetailModal() {
-            document.getElementById('detail-modal').style.display = 'none';
-        }
-
+        
         function editVisit(id) {
             const v = visits.find(item => item.id === id);
             if (!v) return;
-
             document.getElementById('visit-modal-title').innerText = '通院記録の編集';
             document.getElementById('visit-id').value = v.id;
             document.getElementById('visit-hospital').value = v.hospitalId;
@@ -1122,145 +828,193 @@
             document.getElementById('visit-reason').value = v.reason;
             document.getElementById('visit-rehab').value = v.rehab || '';
             document.getElementById('visit-notes').value = v.notes || '';
-
             document.getElementById('visit-modal').style.display = 'flex';
         }
 
-        function openHospitalModal() {
-            document.getElementById('hospital-modal').style.display = 'flex';
-            updateHospitalDropdowns();
+        // --- Details ---
+        function openDetailModal(id) {
+            const v = visits.find(i => i.id === id);
+            if (!v) return;
+            const h = hospitals.find(h => h.id === v.hospitalId);
+            const color = getHospitalColor(v.hospitalId);
+            const d = new Date(v.date);
+            const fDate = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 (${['日','月','火','水','木','金','土'][d.getDay()]})`;
+
+            let htm = `
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <span class="px-3.5 py-1.5 rounded-full text-xs font-black ${color.bg} ${color.text} border-2 ${color.border}">${escapeHtml(h?h.name:'')} (${escapeHtml(h?h.dept:'')})</span>
+                    <span class="text-xs font-black bg-slate-200 text-slate-900 px-3 py-1.5 rounded-xl">${fDate} ${v.time ? `(${v.time})` : ''}</span>
+                </div>
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4">
+                    <span class="text-xs font-black text-blue-950 flex items-center gap-1.5 mb-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>通院理由・診療内容</span>
+                    <h4 class="text-base sm:text-lg font-black text-slate-900">${escapeHtml(v.reason)}</h4>
+                </div>
+            `;
+            if (v.rehab) htm += `<div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4"><span class="text-xs font-black text-amber-950 flex items-center gap-1.5 mb-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block"></span>リハビリ内容・メニュー</span><p class="text-sm font-bold text-slate-900 whitespace-pre-wrap">${escapeHtml(v.rehab)}</p></div>`;
+            if (v.notes) htm += `<div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4"><span class="text-xs font-black text-slate-600 uppercase tracking-wider block mb-1">メモ・指示事項</span><p class="text-sm font-bold text-slate-900 whitespace-pre-wrap">${escapeHtml(v.notes)}</p></div>`;
+
+            document.getElementById('detail-content').innerHTML = htm;
+            document.getElementById('detail-delete-btn').onclick = function() { deleteVisit(v.id); };
+            document.getElementById('detail-edit-btn').onclick = function() { closeDetailModal(); editVisit(v.id); };
+            document.getElementById('detail-modal').style.display = 'flex';
+        }
+        function closeDetailModal() { document.getElementById('detail-modal').style.display = 'none'; }
+
+        // --- Template (Reason/Rehab) Methods ---
+        function openTemplateModal(type) {
+            document.getElementById('template-type').value = type;
+            resetTemplateForm();
+            document.getElementById('template-modal-title').innerText = type === 'reason' ? '通院理由リストの管理' : 'リハビリメニューの管理';
+            renderTemplateList(type);
+            document.getElementById('template-modal').style.display = 'flex';
+        }
+        function closeTemplateModal() { document.getElementById('template-modal').style.display = 'none'; render(); }
+        function resetTemplateForm() {
+            document.getElementById('template-edit-index').value = '-1';
+            document.getElementById('new-template-text').value = '';
+            document.getElementById('template-form-heading').innerText = '項目を追加';
+            document.getElementById('template-submit-btn').innerText = 'リストに追加保存する';
+            document.getElementById('template-cancel-edit-btn').style.display = 'none';
+        }
+        function startEditTemplate(type, idx) {
+            const list = type === 'reason' ? reasonTemplates : rehabTemplates;
+            if (idx < 0 || idx >= list.length) return;
+            document.getElementById('template-edit-index').value = idx;
+            document.getElementById('new-template-text').value = list[idx];
+            document.getElementById('template-form-heading').innerText = '項目を修正・更新';
+            document.getElementById('template-submit-btn').innerText = '修正内容を保存する';
+            document.getElementById('template-cancel-edit-btn').style.display = 'inline-block';
+            document.getElementById('new-template-text').focus();
+        }
+        function renderTemplateList(type) {
+            const container = document.getElementById('template-list-container');
+            const list = type === 'reason' ? reasonTemplates : rehabTemplates;
+            if (list.length === 0) { container.innerHTML = '<p class="text-xs text-slate-500 text-center py-4 font-bold">登録されていません</p>'; return; }
+            let html = '';
+            list.forEach((item, idx) => {
+                html += `
+                    <div class="flex items-center justify-between p-3 bg-white border-2 border-slate-300 rounded-xl shadow-xs gap-2">
+                        <span class="text-xs sm:text-sm font-black text-slate-900 truncate flex-1">${escapeHtml(item)}</span>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <button type="button" onclick="startEditTemplate('${type}', ${idx})" class="text-teal-800 bg-teal-100 hover:bg-teal-200 active:scale-95 px-2.5 py-1.5 rounded-lg transition text-xs font-black">✏️ 修正</button>
+                            <button type="button" onclick="deleteTemplate('${type}', ${idx})" class="text-rose-700 hover:bg-rose-100 active:scale-95 p-1.5 rounded-lg transition text-xs font-black">🗑️ 削除</button>
+                        </div>
+                    </div>`;
+            });
+            container.innerHTML = html;
+        }
+        function saveTemplate(event) {
+            event.preventDefault();
+            try {
+                const type = document.getElementById('template-type').value;
+                const idx = parseInt(document.getElementById('template-edit-index').value, 10);
+                const text = document.getElementById('new-template-text').value.trim();
+                if (!text) return;
+                const list = type === 'reason' ? reasonTemplates : rehabTemplates;
+                
+                if (idx >= 0) list[idx] = text;
+                else if (!list.includes(text)) list.push(text);
+                
+                saveTemplatesOnly(); resetTemplateForm(); renderTemplateList(type); updateTemplateDropdowns();
+                showToast(idx >= 0 ? '修正を保存しました！' : 'リストに追加しました！');
+            } catch (e) { showToast('保存できませんでした', false); }
+        }
+        function deleteTemplate(type, idx) {
+            showConfirm('項目の削除', '削除してもよろしいですか？', function() {
+                try {
+                    if (type === 'reason') reasonTemplates.splice(idx, 1);
+                    else rehabTemplates.splice(idx, 1);
+                    saveTemplatesOnly(); resetTemplateForm(); renderTemplateList(type); updateTemplateDropdowns();
+                    showToast('削除しました');
+                } catch (e) { showToast('削除できませんでした', false); }
+            });
         }
 
-        function closeHospitalModal() {
-            document.getElementById('hospital-modal').style.display = 'none';
-            render();
+        // --- Hospital Methods ---
+        function openHospitalModal() { resetHospitalForm(); document.getElementById('hospital-modal').style.display = 'flex'; updateHospitalDropdowns(); }
+        function closeHospitalModal() { document.getElementById('hospital-modal').style.display = 'none'; render(); }
+        function resetHospitalForm() {
+            document.getElementById('hospital-edit-id').value = '';
+            document.getElementById('new-hospital-name').value = '';
+            document.getElementById('new-hospital-dept').value = '';
+            document.getElementById('hospital-form-heading').innerText = '新しい病院を追加';
+            document.getElementById('hospital-submit-btn').innerText = '病院を登録保存する';
+            document.getElementById('hospital-cancel-edit-btn').style.display = 'none';
         }
-
+        function startEditHospital(id) {
+            const h = hospitals.find(i => i.id === id);
+            if (!h) return;
+            document.getElementById('hospital-edit-id').value = h.id;
+            document.getElementById('new-hospital-name').value = h.name;
+            document.getElementById('new-hospital-dept').value = h.dept || '';
+            document.getElementById('hospital-form-heading').innerText = '病院情報を修正・更新';
+            document.getElementById('hospital-submit-btn').innerText = '修正を保存する';
+            document.getElementById('hospital-cancel-edit-btn').style.display = 'inline-block';
+            document.getElementById('new-hospital-name').focus();
+        }
         function saveHospital(event) {
             event.preventDefault();
             try {
+                const id = document.getElementById('hospital-edit-id').value;
                 const name = document.getElementById('new-hospital-name').value.trim();
                 const dept = document.getElementById('new-hospital-dept').value.trim();
+                if (!name) return;
 
-                if (!name) {
-                    showAlert('入力エラー', '病院名を入力してください。', false);
-                    return;
-                }
-
-                const newH = {
-                    id: 'h_' + Date.now(),
-                    name,
-                    dept
-                };
-
-                hospitals.push(newH);
-                saveHospitalsOnly();
-
-                document.getElementById('new-hospital-name').value = '';
-                document.getElementById('new-hospital-dept').value = '';
-                updateHospitalDropdowns();
-                showToast(`病院「${name}」を保存しました！`);
-                showAlert('保存完了', `「${name}」を病院リストに登録しました。`);
-            } catch (err) {
-                showAlert('エラー', '病院を保存できませんでした: ' + err.message, false);
-            }
+                if (id) {
+                    const i = hospitals.findIndex(h => h.id === id);
+                    if (i !== -1) { hospitals[i].name = name; hospitals[i].dept = dept; }
+                } else { hospitals.push({ id: 'h_' + Date.now(), name, dept }); }
+                
+                saveHospitalsOnly(); resetHospitalForm(); updateHospitalDropdowns();
+                showToast(id ? '病院情報を修正しました！' : '病院を登録しました！');
+            } catch (err) { showToast('保存できませんでした', false); }
         }
-
         function deleteHospital(id) {
-            const inUseCount = visits.filter(v => v.hospitalId === id).length;
-            const confirmMsg = inUseCount > 0 
-                ? `この病院には ${inUseCount}件の通院記録が紐づいています。病院と関連する通院記録も一緒に削除しますか？`
-                : 'この病院をリストから削除しますか？';
-
-            showConfirm('病院の削除', confirmMsg, function() {
+            if (visits.some(v => v.hospitalId === id)) { showAlert('削除不可', 'この病院の通院記録が存在するため削除できません。', false); return; }
+            showConfirm('病院の削除', 'リストから削除しますか？', function() {
                 try {
                     hospitals = hospitals.filter(h => h.id !== id);
-                    if (inUseCount > 0) {
-                        visits = visits.filter(v => v.hospitalId !== id);
-                        saveVisitsOnly();
-                    }
-                    saveHospitalsOnly();
-                    updateHospitalDropdowns();
-                    render();
+                    saveHospitalsOnly(); updateHospitalDropdowns();
                     showToast('病院を削除しました');
-                    showAlert('削除完了', '病院を削除しました。');
-                } catch (e) {
-                    showAlert('エラー', '病院の削除に失敗しました。', false);
-                }
+                } catch (e) { showToast('削除できませんでした', false); }
             });
         }
 
-        function confirmResetAllData() {
-            showConfirm('通院履歴の全リセット', '端末に保存されている通院記録データをすべて初期化しますか？（※登録病院リストは保持されます）', function() {
-                try {
-                    visits = [];
-                    saveVisitsOnly();
-                    render();
-                    showToast('通院履歴をリセットしました');
-                    showAlert('リセット完了', '通院記録データをリセットしました。');
-                } catch (e) {
-                    showAlert('エラー', 'リセットできませんでした。', false);
-                }
-            });
-        }
-
-        function openSyncModal() {
-            document.getElementById('sync-webhook-url').value = webhookUrl;
-            document.getElementById('sync-modal').style.display = 'flex';
-        }
-
-        function closeSyncModal() {
-            document.getElementById('sync-modal').style.display = 'none';
-        }
-
-        // SAFE: ONLY Saves Webhook URL (NEVER Overwrites Visits or Hospitals)
+        // --- Sync & CSV Methods ---
+        function openSyncModal() { document.getElementById('sync-modal').style.display = 'flex'; }
+        function closeSyncModal() { document.getElementById('sync-modal').style.display = 'none'; }
         function saveWebhookUrl() {
             try {
-                const inputUrl = document.getElementById('sync-webhook-url').value.trim();
-                webhookUrl = inputUrl;
-                const saved = saveWebhookOnly();
-
-                if (saved) {
-                    showToast('連携URLを保存しました！');
-                    showAlert('保存完了', 'スプレッドシート連携URLを保存しました。\n（※通院履歴や病院データは保持されています）', true);
-                } else {
-                    showAlert('保存失敗', '連携URLの保存に失敗しました。', false);
-                }
-            } catch (err) {
-                showAlert('エラー', '連携URLを保存できませんでした: ' + err.message, false);
+                webhookUrl = document.getElementById('sync-webhook-url').value.trim();
+                saveWebhookOnly();
+                showToast('連携URLを保存しました！');
+                showAlert('保存完了', '連携URLを正常に保存しました。これにより、通院履歴や病院のデータが消えることはありません。');
+            } catch (e) {
+                showToast('URLを保存できませんでした', false);
             }
         }
-
         function exportCSV() {
             try {
-                if (visits.length === 0) {
-                    showAlert('データなし', '出力できる通院記録がまだありません。', false);
-                    return;
-                }
+                if (visits.length === 0) { showAlert('データなし', '出力できる通院記録がありません。', false); return; }
                 let csv = '\uFEFF登録日時,病院名,診療科,通院日,時間,通院理由,リハビリ内容,メモ\n';
                 visits.forEach(v => {
-                    const h = hospitals.find(item => item.id === v.hospitalId);
-                    const hName = h ? h.name : '';
-                    const hDept = h ? h.dept : '';
-                    csv += `"${new Date().toISOString()}","${hName}","${hDept}","${v.date}","${v.time || ''}","${(v.reason || '').replace(/"/g, '""')}","${(v.rehab || '').replace(/"/g, '""')}","${(v.notes || '').replace(/"/g, '""')}"\n`;
+                    const h = hospitals.find(i => i.id === v.hospitalId);
+                    csv += `"${new Date().toISOString()}","${h?h.name:''}","${h?h.dept:''}","${v.date}","${v.time||''}","${(v.reason||'').replace(/"/g,'""')}","${(v.rehab||'').replace(/"/g,'""')}","${(v.notes||'').replace(/"/g,'""')}"\n`;
                 });
-
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url;
+                a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
                 a.download = `通院履歴_${new Date().toISOString().split('T')[0]}.csv`;
                 a.click();
-                showToast('CSVファイルを保存しました！');
-                showAlert('CSV保存完了', 'すべての通院履歴をCSVファイルで保存しました。');
+                showToast('CSVファイルをダウンロードしました！');
+                showAlert('出力完了', 'すべての通院履歴をCSVで出力しました。');
             } catch (err) {
-                showAlert('エラー', 'CSVダウンロードに失敗しました: ' + err.message, false);
+                showToast('CSV出力できませんでした', false);
+                showAlert('エラー', 'CSVダウンロードに失敗しました。', false);
             }
         }
-
         async function sendToWebhook(visitObj) {
             if (!webhookUrl) return;
-            const h = hospitals.find(item => item.id === visitObj.hospitalId);
+            const h = hospitals.find(i => i.id === visitObj.hospitalId);
             const payload = {
                 hospitalName: h ? h.name : '',
                 department: h ? h.dept : '',
@@ -1270,51 +1024,31 @@
                 rehab: visitObj.rehab || '',
                 notes: visitObj.notes || ''
             };
-
             try {
-                await fetch(webhookUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 showToast('スプレッドシートに保存しました！');
-                showAlert('保存完了', '通院記録を保存し、スプレッドシートへの送信が完了しました。', true);
+                showAlert('送信完了', 'スプレッドシートへのデータ送信が完了しました。');
             } catch (e) {
-                console.error('Webhook sync failed', e);
-                showToast('端末に保存（シート送信エラー）', false);
-                showAlert('保存警告', '端末への保存は完了しましたが、スプレッドシートへの自動送信ができませんでした。URLをご確認ください。', false);
+                showToast('シートへの送信ができませんでした', false);
+                showAlert('送信エラー', '端末には保存できましたが、スプレッドシートへの送信に失敗しました。URLを確認してください。', false);
             }
         }
-
         async function syncToSheetManually() {
-            if (!webhookUrl) {
-                showAlert('URL未設定', '先にGAS WebアプリのURLを入力して「連携URLを保存する」を押してください。', false);
-                return;
-            }
-            if (visits.length === 0) {
-                showAlert('データなし', '送信対象の通院記録がありません。', false);
-                return;
-            }
-            showConfirm('一括送信', `登録されている ${visits.length}件の通院記録をスプレッドシートへ送信しますか？`, async function() {
+            if (!webhookUrl) { showAlert('URL未設定', '先にGAS WebアプリのURLを保存してください。', false); return; }
+            if (visits.length === 0) { showAlert('データなし', '送信対象の通院記録がありません。', false); return; }
+            
+            showConfirm('一括送信', `登録されている ${visits.length}件の記録をスプレッドシートへ送信しますか？`, async function() {
                 const btn = document.getElementById('btn-sync-manual');
-                const originalText = btn.innerText;
-                btn.innerText = '送信中...';
-                btn.disabled = true;
-
+                const orgTxt = btn.innerText;
+                btn.innerText = '送信中...'; btn.disabled = true;
                 try {
-                    for (const v of visits) {
-                        await sendToWebhook(v);
-                    }
-                    showToast('すべての通院記録を一括送信しました！');
+                    for (const v of visits) await sendToWebhook(v);
+                    showToast('一括送信が完了しました！');
                     showAlert('送信完了', 'スプレッドシートへの一括送信が完了しました。');
                 } catch (err) {
-                    showToast('送信に失敗しました', false);
+                    showToast('送信できませんでした', false);
                     showAlert('エラー', '一括送信中に問題が発生しました。', false);
-                } finally {
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                }
+                } finally { btn.innerText = orgTxt; btn.disabled = false; }
             });
         }
     </script>
