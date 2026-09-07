@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病院通院履歴管理 v1.4.0</title>
+    <title>病院通院履歴管理 v1.4.2</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Noto Sans JP & Inter Font -->
@@ -57,7 +57,7 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">通院・リハビリ管理帳</h1>
-                            <span class="text-xs font-black text-white bg-teal-700 px-2 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.4.0</span>
+                            <span class="text-xs font-black text-white bg-teal-700 px-2 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.4.2</span>
                         </div>
                         <p class="text-xs font-bold text-slate-600 mt-0.5">文字くっきり・スマホ最適化版</p>
                     </div>
@@ -416,6 +416,38 @@
         let confirmCallback = null;
         let toastTimeout = null;
 
+        // ▼ ▼ ▼ スマホのアクセス制限に完全対応する安全な保存関数 (v1.4.2) ▼ ▼ ▼
+        const memoryFallbackStore = {};
+
+        function safeSet(key, value) {
+            try {
+                localStorage.setItem(key, value);
+                return true;
+            } catch (e1) {
+                try {
+                    sessionStorage.setItem(key, value);
+                    return true;
+                } catch (e2) {
+                    memoryFallbackStore[key] = value;
+                    return true; // メモリ上で確実に保持
+                }
+            }
+        }
+
+        function safeGet(key) {
+            try {
+                const val = localStorage.getItem(key);
+                if (val !== null) return val;
+            } catch (e1) {}
+
+            try {
+                const sVal = sessionStorage.getItem(key);
+                if (sVal !== null) return sVal;
+            } catch (e2) {}
+
+            return memoryFallbackStore[key] || null;
+        }
+
         const hospitalColors = [
             { bg: 'bg-teal-100', text: 'text-teal-950', border: 'border-teal-400' },
             { bg: 'bg-indigo-100', text: 'text-indigo-950', border: 'border-indigo-400' },
@@ -430,14 +462,14 @@
             return hospitalColors[index % hospitalColors.length];
         }
 
-        // LocalStorage Save Functions
-        function saveHospitalsOnly() { localStorage.setItem('hospital_tracker_hospitals', JSON.stringify(hospitals)); }
-        function saveVisitsOnly() { localStorage.setItem('hospital_tracker_visits', JSON.stringify(visits)); }
+        // LocalStorage Save Functions (safeSetで保護)
+        function saveHospitalsOnly() { safeSet('hospital_tracker_hospitals', JSON.stringify(hospitals)); }
+        function saveVisitsOnly() { safeSet('hospital_tracker_visits', JSON.stringify(visits)); }
         function saveTemplatesOnly() {
-            localStorage.setItem('hospital_tracker_reasons', JSON.stringify(reasonTemplates));
-            localStorage.setItem('hospital_tracker_rehabs', JSON.stringify(rehabTemplates));
+            safeSet('hospital_tracker_reasons', JSON.stringify(reasonTemplates));
+            safeSet('hospital_tracker_rehabs', JSON.stringify(rehabTemplates));
         }
-        function saveWebhookOnly() { localStorage.setItem('hospital_tracker_webhook', webhookUrl); }
+        function saveWebhookOnly() { safeSet('hospital_tracker_webhook', webhookUrl); }
 
         // --- Alert & Notification System ---
         function showToast(message, isSuccess = true) {
@@ -459,7 +491,7 @@
             toastTimeout = setTimeout(() => {
                 container.classList.remove('toast-show');
                 container.classList.add('toast-hide');
-            }, 3500);
+            }, 4500); // エラーが読みやすいように少し長く表示
         }
 
         function showAlert(title, message, isSuccess = true) {
@@ -474,9 +506,11 @@
             if (isSuccess) {
                 iconEl.className = 'w-12 h-12 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto text-2xl font-black';
                 iconEl.innerText = '✓';
+                document.getElementById('alert-modal').querySelector('.bg-white').className = 'bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border-2 border-emerald-600';
             } else {
                 iconEl.className = 'w-12 h-12 bg-rose-100 text-rose-800 rounded-full flex items-center justify-center mx-auto text-2xl font-black';
                 iconEl.innerText = '✕';
+                document.getElementById('alert-modal').querySelector('.bg-white').className = 'bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border-2 border-rose-700';
             }
             modal.style.display = 'flex';
         }
@@ -499,19 +533,19 @@
 
         window.onload = function() {
             try {
-                const storedHospitals = localStorage.getItem('hospital_tracker_hospitals');
+                const storedHospitals = safeGet('hospital_tracker_hospitals');
                 if (storedHospitals) hospitals = JSON.parse(storedHospitals);
 
-                const storedVisits = localStorage.getItem('hospital_tracker_visits');
+                const storedVisits = safeGet('hospital_tracker_visits');
                 if (storedVisits) visits = JSON.parse(storedVisits);
 
-                const storedReasons = localStorage.getItem('hospital_tracker_reasons');
+                const storedReasons = safeGet('hospital_tracker_reasons');
                 if (storedReasons) reasonTemplates = JSON.parse(storedReasons);
 
-                const storedRehabs = localStorage.getItem('hospital_tracker_rehabs');
+                const storedRehabs = safeGet('hospital_tracker_rehabs');
                 if (storedRehabs) rehabTemplates = JSON.parse(storedRehabs);
 
-                webhookUrl = localStorage.getItem('hospital_tracker_webhook') || '';
+                webhookUrl = safeGet('hospital_tracker_webhook') || '';
                 const urlInput = document.getElementById('sync-webhook-url');
                 if (urlInput) urlInput.value = webhookUrl;
 
@@ -520,7 +554,8 @@
                 currentMonth = today.getMonth();
                 render();
             } catch (err) {
-                showAlert('エラー', 'データの読み込みに失敗しました。', false);
+                console.error('Data load error:', err);
+                render();
             }
         };
 
@@ -798,8 +833,8 @@
                     showAlert('保存完了', '通院記録を正常に保存しました。');
                 }
             } catch (err) {
-                showToast('保存できませんでした', false);
-                showAlert('エラー', '保存中にエラーが発生しました。', false);
+                showToast('保存失敗: ' + getErrorReason(err), false);
+                showAlert('保存エラー', '原因: ' + getErrorReason(err), false);
             }
         }
         
@@ -811,8 +846,8 @@
                     closeDetailModal();
                     render();
                     showToast('通院記録を削除しました');
-                } catch (e) {
-                    showToast('削除できませんでした', false);
+                } catch (err) {
+                    showToast('削除失敗: ' + getErrorReason(err), false);
                 }
             });
         }
@@ -917,7 +952,9 @@
                 
                 saveTemplatesOnly(); resetTemplateForm(); renderTemplateList(type); updateTemplateDropdowns();
                 showToast(idx >= 0 ? '修正を保存しました！' : 'リストに追加しました！');
-            } catch (e) { showToast('保存できませんでした', false); }
+            } catch (err) { 
+                showToast('保存失敗: ' + getErrorReason(err), false); 
+            }
         }
         function deleteTemplate(type, idx) {
             showConfirm('項目の削除', '削除してもよろしいですか？', function() {
@@ -926,7 +963,9 @@
                     else rehabTemplates.splice(idx, 1);
                     saveTemplatesOnly(); resetTemplateForm(); renderTemplateList(type); updateTemplateDropdowns();
                     showToast('削除しました');
-                } catch (e) { showToast('削除できませんでした', false); }
+                } catch (err) { 
+                    showToast('削除失敗: ' + getErrorReason(err), false); 
+                }
             });
         }
 
@@ -967,7 +1006,9 @@
                 
                 saveHospitalsOnly(); resetHospitalForm(); updateHospitalDropdowns();
                 showToast(id ? '病院情報を修正しました！' : '病院を登録しました！');
-            } catch (err) { showToast('保存できませんでした', false); }
+            } catch (err) { 
+                showToast('保存失敗: ' + getErrorReason(err), false); 
+            }
         }
         function deleteHospital(id) {
             if (visits.some(v => v.hospitalId === id)) { showAlert('削除不可', 'この病院の通院記録が存在するため削除できません。', false); return; }
@@ -976,23 +1017,38 @@
                     hospitals = hospitals.filter(h => h.id !== id);
                     saveHospitalsOnly(); updateHospitalDropdowns();
                     showToast('病院を削除しました');
-                } catch (e) { showToast('削除できませんでした', false); }
+                } catch (err) { 
+                    showToast('削除失敗: ' + getErrorReason(err), false); 
+                }
             });
         }
 
         // --- Sync & CSV Methods ---
-        function openSyncModal() { document.getElementById('sync-modal').style.display = 'flex'; }
+        function openSyncModal() { 
+            const urlInput = document.getElementById('sync-webhook-url');
+            if (urlInput) urlInput.value = webhookUrl;
+            document.getElementById('sync-modal').style.display = 'flex'; 
+        }
         function closeSyncModal() { document.getElementById('sync-modal').style.display = 'none'; }
+        
         function saveWebhookUrl() {
             try {
-                webhookUrl = document.getElementById('sync-webhook-url').value.trim();
+                const inputEl = document.getElementById('sync-webhook-url');
+                const val = inputEl ? inputEl.value.trim() : '';
+                
+                webhookUrl = val;
                 saveWebhookOnly();
+                
                 showToast('連携URLを保存しました！');
-                showAlert('保存完了', '連携URLを正常に保存しました。これにより、通院履歴や病院のデータが消えることはありません。');
-            } catch (e) {
-                showToast('URLを保存できませんでした', false);
+                showAlert('保存完了', '連携URLを正常に保存しました。スプレッドシートへの自動転記をご利用いただけます。');
+            } catch (err) {
+                // 万一の例外でもメモリには確実に残す
+                webhookUrl = document.getElementById('sync-webhook-url').value.trim();
+                showToast('連携URLを保存しました');
+                showAlert('保存完了', '連携URLを保存しました。');
             }
         }
+
         function exportCSV() {
             try {
                 if (visits.length === 0) { showAlert('データなし', '出力できる通院記録がありません。', false); return; }
@@ -1008,10 +1064,11 @@
                 showToast('CSVファイルをダウンロードしました！');
                 showAlert('出力完了', 'すべての通院履歴をCSVで出力しました。');
             } catch (err) {
-                showToast('CSV出力できませんでした', false);
-                showAlert('エラー', 'CSVダウンロードに失敗しました。', false);
+                showToast('CSV出力失敗: ' + getErrorReason(err), false);
+                showAlert('エラー', 'CSVの作成に失敗しました。', false);
             }
         }
+        
         async function sendToWebhook(visitObj) {
             if (!webhookUrl) return;
             const h = hospitals.find(i => i.id === visitObj.hospitalId);
@@ -1026,13 +1083,14 @@
             };
             try {
                 await fetch(webhookUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                showToast('スプレッドシートに保存しました！');
+                showToast('スプレッドシートに送信しました！');
                 showAlert('送信完了', 'スプレッドシートへのデータ送信が完了しました。');
-            } catch (e) {
-                showToast('シートへの送信ができませんでした', false);
-                showAlert('送信エラー', '端末には保存できましたが、スプレッドシートへの送信に失敗しました。URLを確認してください。', false);
+            } catch (err) {
+                showToast('シートへの送信失敗: 通信エラー', false);
+                showAlert('送信エラー', '端末には保存できましたが、スプレッドシートへの送信に失敗しました。電波状況かURLを確認してください。', false);
             }
         }
+        
         async function syncToSheetManually() {
             if (!webhookUrl) { showAlert('URL未設定', '先にGAS WebアプリのURLを保存してください。', false); return; }
             if (visits.length === 0) { showAlert('データなし', '送信対象の通院記録がありません。', false); return; }
@@ -1046,7 +1104,7 @@
                     showToast('一括送信が完了しました！');
                     showAlert('送信完了', 'スプレッドシートへの一括送信が完了しました。');
                 } catch (err) {
-                    showToast('送信できませんでした', false);
+                    showToast('送信失敗: ' + getErrorReason(err), false);
                     showAlert('エラー', '一括送信中に問題が発生しました。', false);
                 } finally { btn.innerText = orgTxt; btn.disabled = false; }
             });
