@@ -58,36 +58,34 @@
 
     <main class="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col gap-5">
         
-        <!-- Controls & View Switcher -->
-        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border-2 border-slate-300 shadow-sm">
-            <!-- View Mode Tabs (Vibrant & Clear Active state) -->
-            <div class="flex bg-slate-100 p-1.5 rounded-xl w-full sm:w-auto border-2 border-slate-200 gap-1.5">
-                <button onclick="switchView('calendar')" id="btn-calendar" class="flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs sm:text-sm font-black transition bg-teal-700 text-white shadow-md flex items-center justify-center gap-1.5">
+        <div class="flex flex-col gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border-2 border-slate-300 shadow-sm">
+            <!-- View Mode Tabs with custom active color states -->
+            <div class="flex bg-slate-100 p-1.5 rounded-xl w-full border-2 border-slate-200 gap-1.5">
+                <button onclick="switchView('calendar')" id="btn-calendar" class="flex-1 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-black transition bg-teal-700 text-white shadow-md flex items-center justify-center gap-1.5">
                     📅 カレンダー表示
                 </button>
-                <button onclick="switchView('list')" id="btn-list" class="flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs sm:text-sm font-black transition text-slate-700 hover:bg-slate-200 flex items-center justify-center gap-1.5">
+                <button onclick="switchView('list')" id="btn-list" class="flex-1 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-black transition text-slate-700 hover:bg-slate-200 flex items-center justify-center gap-1.5">
                     📋 一覧・履歴表示
                 </button>
             </div>
 
-            <!-- Filter & Month Controls -->
-            <div class="flex items-center justify-between sm:justify-end gap-2.5">
-                <div class="flex items-center gap-1.5 bg-slate-50 border-2 border-slate-300 px-2 py-1.5 rounded-xl">
-                    <button onclick="changeMonth(-1)" class="p-1.5 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition text-slate-800 font-bold">
+            <!-- Filter & Month Controls (Stacked cleanly for mobile responsiveness) -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div class="flex items-center justify-between gap-1.5 bg-slate-50 border-2 border-slate-300 px-3 py-2 rounded-xl">
+                    <button onclick="changeMonth(-1)" class="p-1.5 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition text-slate-800 font-bold shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
                     </button>
-                    <span id="current-month-label" class="font-black text-slate-900 text-base sm:text-lg min-w-[110px] text-center">2026年9月</span>
-                    <button onclick="changeMonth(1)" class="p-1.5 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition text-slate-800 font-bold">
+                    <span id="current-month-label" class="font-black text-slate-900 text-base sm:text-lg min-w-[120px] text-center">2026年9月</span>
+                    <button onclick="changeMonth(1)" class="p-1.5 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 transition text-slate-800 font-bold shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
                     </button>
                 </div>
-                <select id="hospital-filter" onchange="render()" class="bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-xs sm:text-sm rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-teal-600">
+                <select id="hospital-filter" onchange="render()" class="w-full sm:w-auto bg-slate-50 border-2 border-slate-300 text-slate-900 font-bold text-xs sm:text-sm rounded-xl px-3.5 py-3 outline-none focus:ring-2 focus:ring-teal-600">
                     <option value="">すべての病院</option>
                 </select>
             </div>
         </div>
 
-        <!-- Calendar View -->
         <div id="view-calendar" class="bg-white rounded-2xl border-2 border-slate-300 shadow-sm overflow-hidden transition-all">
             <!-- Days of week header -->
             <div class="grid grid-cols-7 bg-slate-200 border-b-2 border-slate-300 text-center text-xs sm:text-sm font-black py-2.5 text-slate-800">
@@ -105,7 +103,6 @@
             </div>
         </div>
 
-        <!-- List View -->
         <div id="view-list" class="hidden flex-col gap-3.5">
             <div id="visits-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 <!-- Javascript will inject visit cards here -->
@@ -320,12 +317,18 @@
         </div>
     </div>
 
+    <!-- Custom Alert Modal for clear notifications -->
+    <div id="alert-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4 border-2 border-emerald-600">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto text-xl font-black">✓</div>
+            <h4 id="alert-title" class="text-base sm:text-lg font-black text-slate-900">保存しました</h4>
+            <p id="alert-message" class="text-xs sm:text-sm font-bold text-slate-600">スプレッドシートにデータを保存しました。</p>
+            <button onclick="closeAlertModal()" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black py-3 rounded-xl text-sm transition shadow">OK</button>
+        </div>
+    </div>
+
     <script>
-        // Initial state data or load from localStorage
-        let hospitals = JSON.parse(localStorage.getItem('hospital_tracker_hospitals')) || [
-            { id: 'h1', name: 'さくら総合病院', dept: '総合診療・整形外科' },
-            { id: 'h2', name: 'ひまわりリハビリクリニック', dept: 'リハビリテーション科' }
-        ];
+        let hospitals = JSON.parse(localStorage.getItem('hospital_tracker_hospitals')) || [];
 
         let reasonTemplates = JSON.parse(localStorage.getItem('hospital_tracker_reasons')) || [
             '定期診察・レントゲン確認',
@@ -341,26 +344,7 @@
             '平行棒での歩行練習、階段昇降'
         ];
 
-        let visits = JSON.parse(localStorage.getItem('hospital_tracker_visits')) || [
-            {
-                id: 'v1',
-                hospitalId: 'h1',
-                date: '2026-09-04',
-                time: '10:00',
-                reason: '定期診察・レントゲン確認',
-                rehab: '関節可動域のチェック、アイシング指導',
-                notes: '順調に回復中。次回2週間後。'
-            },
-            {
-                id: 'v2',
-                hospitalId: 'h2',
-                date: '2026-09-07',
-                time: '14:30',
-                reason: '膝の痛み・診察',
-                rehab: '低周波治療15分、太ももの筋トレ、歩行訓練',
-                notes: '自宅でも毎日スクワットを行うこと。'
-            }
-        ];
+        let visits = JSON.parse(localStorage.getItem('hospital_tracker_visits')) || [];
 
         let webhookUrl = localStorage.getItem('hospital_tracker_webhook') || '';
 
@@ -398,6 +382,16 @@
             render();
         }
 
+        function showAlert(title, message) {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-message').innerText = message;
+            document.getElementById('alert-modal').classList.remove('hidden');
+        }
+
+        function closeAlertModal() {
+            document.getElementById('alert-modal').classList.add('hidden');
+        }
+
         function switchView(view) {
             currentView = view;
             const btnCal = document.getElementById('btn-calendar');
@@ -406,14 +400,14 @@
             const viewList = document.getElementById('view-list');
 
             if (view === 'calendar') {
-                btnCal.className = 'flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs sm:text-sm font-black transition bg-teal-700 text-white shadow-md flex items-center justify-center gap-1.5';
-                btnList.className = 'flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs sm:text-sm font-black transition text-slate-700 hover:bg-slate-200 flex items-center justify-center gap-1.5';
+                btnCal.className = 'flex-1 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-black transition bg-teal-700 text-white shadow-md flex items-center justify-center gap-1.5';
+                btnList.className = 'flex-1 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-black transition text-slate-700 hover:bg-slate-200 flex items-center justify-center gap-1.5';
                 viewCal.classList.remove('hidden');
                 viewList.classList.add('hidden');
                 viewList.classList.remove('flex');
             } else {
-                btnList.className = 'flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs sm:text-sm font-black transition bg-teal-700 text-white shadow-md flex items-center justify-center gap-1.5';
-                btnCal.className = 'flex-1 sm:flex-initial px-4 py-2.5 rounded-lg text-xs sm:text-sm font-black transition text-slate-700 hover:bg-slate-200 flex items-center justify-center gap-1.5';
+                btnList.className = 'flex-1 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-black transition bg-teal-700 text-white shadow-md flex items-center justify-center gap-1.5';
+                btnCal.className = 'flex-1 px-3 py-2.5 rounded-lg text-xs sm:text-sm font-black transition text-slate-700 hover:bg-slate-200 flex items-center justify-center gap-1.5';
                 viewList.classList.remove('hidden');
                 viewList.classList.add('flex');
                 viewCal.classList.add('hidden');
@@ -675,6 +669,7 @@
 
         function openVisitModal() {
             if (hospitals.length === 0) {
+                showAlert('病院の登録が必要です', '先に対象の病院を「病院管理」から追加してください。');
                 openHospitalModal();
                 return;
             }
@@ -690,6 +685,7 @@
 
         function openVisitModalForDate(dateStr) {
             if (hospitals.length === 0) {
+                showAlert('病院の登録が必要です', '先に対象の病院を「病院管理」から追加してください。');
                 openHospitalModal();
                 return;
             }
@@ -741,6 +737,8 @@
 
             if (webhookUrl) {
                 sendToWebhook(visitObj);
+            } else {
+                showAlert('保存しました', '通院記録を保存しました。');
             }
         }
 
@@ -879,7 +877,7 @@
 
             document.getElementById('detail-content').innerHTML = contentHtml;
             document.getElementById('detail-delete-btn').setAttribute('onclick', `deleteVisit('${v.id}')`);
-            document.getElementById('detail-edit-btn').setAttribute('onclick', `closeDetailModal(); editVisit('${v.id}')`);
+            document.getElementById('detail-edit-btn').setAttribute('onclick`, `closeDetailModal(); editVisit('${v.id}')`);
 
             document.getElementById('detail-modal').classList.remove('hidden');
         }
@@ -931,12 +929,13 @@
             document.getElementById('new-hospital-name').value = '';
             document.getElementById('new-hospital-dept').value = '';
             updateHospitalDropdowns();
+            showAlert('病院を追加しました', `「${name}」を登録しました。`);
         }
 
         function deleteHospital(id) {
             const inUse = visits.some(v => v.hospitalId === id);
             if (inUse) {
-                alert('この病院を使用している通院記録が存在するため削除できません。');
+                showAlert('削除できません', 'この病院を使用している通院記録が存在するため削除できません。');
                 return;
             }
 
@@ -958,7 +957,7 @@
         function saveWebhookUrl() {
             webhookUrl = document.getElementById('sync-webhook-url').value.trim();
             saveData();
-            alert('連携URLを保存しました。');
+            showAlert('連携URLを保存しました', 'スプレッドシート連携URLを設定しました。');
         }
 
         function exportCSV() {
@@ -976,6 +975,7 @@
             a.href = url;
             a.download = `通院履歴_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
+            showAlert('CSVダウンロード完了', 'すべてのデータをCSV形式でダウンロードしました。');
         }
 
         async function sendToWebhook(visitObj) {
@@ -1005,14 +1005,14 @@
 
         async function syncToSheetManually() {
             if (!webhookUrl) {
-                alert('先にGAS WebアプリのURLを入力・保存してください。');
+                showAlert('URL未設定', '先にGAS WebアプリのURLを入力・保存してください。');
                 return;
             }
             if (confirm('登録されているすべての通院記録をスプレッドシートへ送信しますか？')) {
                 for (const v of visits) {
                     await sendToWebhook(v);
                 }
-                alert('一括送信が完了しました。スプレッドシートをご確認ください。');
+                showAlert('保存しました', 'スプレッドシートへの一括転記・保存が完了しました。');
             }
         }
     </script>
