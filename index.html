@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>病院通院履歴管理 v1.4.2</title>
+    <title>病院通院履歴管理 v1.5.0</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Noto Sans JP & Inter Font -->
@@ -57,7 +57,7 @@
                     <div>
                         <div class="flex items-center gap-2">
                             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">通院・リハビリ管理帳</h1>
-                            <span class="text-xs font-black text-white bg-teal-700 px-2 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.4.2</span>
+                            <span class="text-xs font-black text-white bg-teal-700 px-2 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.5.0</span>
                         </div>
                         <p class="text-xs font-bold text-slate-600 mt-0.5">文字くっきり・スマホ最適化版</p>
                     </div>
@@ -342,6 +342,10 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                         登録済みデータをスプレッドシートに一括送信
                     </button>
+                    <button type="button" id="btn-load-sheet" onclick="restoreFromSheet()" class="w-full bg-sky-700 hover:bg-sky-800 active:scale-95 text-white font-black py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        スプレッドシートからデータを復元・取得
+                    </button>
                 </div>
             </div>
         </div>
@@ -416,20 +420,53 @@
         let confirmCallback = null;
         let toastTimeout = null;
 
-        // ▼ ▼ ▼ スマホのアクセス制限に完全対応する安全な保存関数 (v1.4.2) ▼ ▼ ▼
+        // ▼ ▼ ▼ IndexedDB による超高耐久ローカルストレージ ▼ ▼ ▼
+        let db = null;
+        function initDB() {
+            return new Promise((resolve) => {
+                if (!window.indexedDB) { resolve(null); return; }
+                const req = indexedDB.open('HospitalTrackerDB', 1);
+                req.onupgradeneeded = (e) => {
+                    const d = e.target.result;
+                    if (!d.objectStoreNames.contains('store')) d.createObjectStore('store');
+                };
+                req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+                req.onerror = () => resolve(null);
+            });
+        }
+
+        function idbSet(key, val) {
+            if (!db) return;
+            try {
+                const tx = db.transaction('store', 'readwrite');
+                tx.objectStore('store').put(val, key);
+            } catch (e) {}
+        }
+
+        function idbGet(key) {
+            return new Promise((resolve) => {
+                if (!db) { resolve(null); return; }
+                try {
+                    const tx = db.transaction('store', 'readonly');
+                    const req = tx.objectStore('store').get(key);
+                    req.onsuccess = () => resolve(req.result || null);
+                    req.onerror = () => resolve(null);
+                } catch (e) { resolve(null); }
+            });
+        }
+
+        // 端末のブラウザによる自動破棄を防止
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist();
+        }
+
         const memoryFallbackStore = {};
 
         function safeSet(key, value) {
-            try {
-                localStorage.setItem(key, value);
-                return true;
-            } catch (e1) {
-                try {
-                    sessionStorage.setItem(key, value);
-                    return true;
-                } catch (e2) {
+            idbSet(key, value);
+            try { localStorage.setItem(key, value); } catch (e) {
+                try { sessionStorage.setItem(key, value); } catch (e2) {
                     memoryFallbackStore[key] = value;
-                    return true; // メモリ上で確実に保持
                 }
             }
         }
@@ -439,12 +476,10 @@
                 const val = localStorage.getItem(key);
                 if (val !== null) return val;
             } catch (e1) {}
-
             try {
                 const sVal = sessionStorage.getItem(key);
                 if (sVal !== null) return sVal;
             } catch (e2) {}
-
             return memoryFallbackStore[key] || null;
         }
 
@@ -523,29 +558,30 @@
             confirmCallback = onOk;
             document.getElementById('confirm-modal').style.display = 'flex';
         }
-
-        function closeConfirmModal(confirmed) {
-            document.getElementById('confirm-modal').style.display = 'none';
-            if (confirmed && typeof confirmCallback === 'function') confirmCallback();
-            confirmCallback = null;
-        }
-        // -----------------------------------
-
-        window.onload = function() {
+        window.onload = async function() {
             try {
-                const storedHospitals = safeGet('hospital_tracker_hospitals');
-                if (storedHospitals) hospitals = JSON.parse(storedHospitals);
+                await initDB();
 
-                const storedVisits = safeGet('hospital_tracker_visits');
-                if (storedVisits) visits = JSON.parse(storedVisits);
+                // IndexedDB または localStorage から読み出し
+                const idbHospitals = await idbGet('hospital_tracker_hospitals');
+                const storedHospitals = idbHospitals || safeGet('hospital_tracker_hospitals');
+                if (storedHospitals) hospitals = typeof storedHospitals === 'string' ? JSON.parse(storedHospitals) : storedHospitals;
 
-                const storedReasons = safeGet('hospital_tracker_reasons');
-                if (storedReasons) reasonTemplates = JSON.parse(storedReasons);
+                const idbVisits = await idbGet('hospital_tracker_visits');
+                const storedVisits = idbVisits || safeGet('hospital_tracker_visits');
+                if (storedVisits) visits = typeof storedVisits === 'string' ? JSON.parse(storedVisits) : storedVisits;
 
-                const storedRehabs = safeGet('hospital_tracker_rehabs');
-                if (storedRehabs) rehabTemplates = JSON.parse(storedRehabs);
+                const idbReasons = await idbGet('hospital_tracker_reasons');
+                const storedReasons = idbReasons || safeGet('hospital_tracker_reasons');
+                if (storedReasons) reasonTemplates = typeof storedReasons === 'string' ? JSON.parse(storedReasons) : storedReasons;
 
-                webhookUrl = safeGet('hospital_tracker_webhook') || '';
+                const idbRehabs = await idbGet('hospital_tracker_rehabs');
+                const storedRehabs = idbRehabs || safeGet('hospital_tracker_rehabs');
+                if (storedRehabs) rehabTemplates = typeof storedRehabs === 'string' ? JSON.parse(storedRehabs) : storedRehabs;
+
+                const idbWebhook = await idbGet('hospital_tracker_webhook');
+                webhookUrl = idbWebhook || safeGet('hospital_tracker_webhook') || '';
+
                 const urlInput = document.getElementById('sync-webhook-url');
                 if (urlInput) urlInput.value = webhookUrl;
 
@@ -1108,6 +1144,38 @@
                     showAlert('エラー', '一括送信中に問題が発生しました。', false);
                 } finally { btn.innerText = orgTxt; btn.disabled = false; }
             });
+        }
+
+        async function restoreFromSheet() {
+            if (!webhookUrl) { showAlert('URL未設定', '先にGAS WebアプリのURLを入力・保存してください。', false); return; }
+            const btn = document.getElementById('btn-load-sheet');
+            const orgTxt = btn.innerText;
+            btn.innerText = 'スプレッドシートから取得中...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(webhookUrl);
+                const data = await res.json();
+                if (data && Array.isArray(data.visits) && data.visits.length > 0) {
+                    // 病院リストも復元
+                    if (data.hospitals && Array.isArray(data.hospitals)) {
+                        hospitals = data.hospitals;
+                        saveHospitalsOnly();
+                    }
+                    visits = data.visits;
+                    saveVisitsOnly();
+                    render();
+                    showToast(`${visits.length}件のデータを復元しました！`);
+                    showAlert('復元完了', `スプレッドシートから ${visits.length}件の通院履歴を正常に読み込みました。`);
+                } else {
+                    showAlert('データなし', 'スプレッドシートに登録済みの通院データがありませんでした。', false);
+                }
+            } catch (e) {
+                showAlert('取得エラー', 'スプレッドシートからのデータ取得に失敗しました。最新のGASコードがデプロイされているかご確認ください。', false);
+            } finally {
+                btn.innerText = orgTxt;
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
