@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通院・リハビリ管理帳 v1.6.1</title>
+    <title>通院・リハビリ管理帳 v1.6.2</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -23,10 +23,10 @@
                 min-height: 100px;
             }
         }
-        /* トーストアニメーション */
+        /* トーストアニメーション（中央寄せの二重ズレを解消） */
         @keyframes slideDownFade {
-            0% { opacity: 0; transform: translate(-50%, -20px); }
-            100% { opacity: 1; transform: translate(-50%, 0); }
+            0% { opacity: 0; transform: translateY(-16px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
         .toast-enter {
             animation: slideDownFade 0.25s ease-out forwards;
@@ -61,7 +61,7 @@
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">通院・リハビリ管理帳</h1>
-                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.6.1</span>
+                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.6.2</span>
                         </div>
                         <p class="text-xs font-bold text-slate-600 mt-0.5">文字くっきり・スマホ最適化版</p>
                     </div>
@@ -168,9 +168,7 @@
 
     </main>
 
-    <!-- =========================================================
-         モーダル1: 通院記録 追加・修正モーダル
-    ========================================================== -->
+    <!-- モーダル1: 通院記録 追加・修正モーダル -->
     <div id="visit-modal" style="display:none;" class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-lg rounded-2xl border-2 border-slate-300 shadow-2xl my-auto overflow-hidden">
             <div class="bg-teal-700 text-white px-4 py-3.5 flex items-center justify-between">
@@ -181,7 +179,6 @@
             <form id="visit-form" onsubmit="handleSaveVisit(event)" class="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
                 <input type="hidden" id="visit-id">
 
-                <!-- 病院選択 -->
                 <div>
                     <div class="flex items-center justify-between mb-1">
                         <label for="visit-hospital" class="text-sm font-black text-slate-900">病院名 <span class="text-rose-600">*</span></label>
@@ -192,7 +189,6 @@
                     </select>
                 </div>
 
-                <!-- 日付と時間 -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label for="visit-date" class="block text-sm font-black text-slate-900 mb-1">通院日 <span class="text-rose-600">*</span></label>
@@ -204,7 +200,6 @@
                     </div>
                 </div>
 
-                <!-- 通院理由（ブルー・インディゴ系で明確に色分け） -->
                 <div class="bg-blue-50 border-2 border-blue-300 rounded-2xl p-3.5 space-y-2">
                     <div class="flex items-center justify-between gap-2">
                         <label for="visit-reason" class="text-sm font-black text-blue-950 flex items-center gap-1.5">
@@ -219,7 +214,6 @@
                     <input type="text" id="visit-reason" placeholder="例：定期検診、処方箋の受取、膝の痛み相談" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-blue-300 bg-white font-bold text-slate-900 focus:border-blue-600 focus:outline-none">
                 </div>
 
-                <!-- リハビリ内容（アンバー・オレンジ系で明確に色分け） -->
                 <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 space-y-2">
                     <div class="flex items-center justify-between gap-2">
                         <label for="visit-rehab" class="text-sm font-black text-amber-950 flex items-center gap-1.5">
@@ -234,13 +228,11 @@
                     <input type="text" id="visit-rehab" placeholder="例：ストレッチ、筋力トレーニング、電気治療" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-amber-300 bg-white font-bold text-slate-900 focus:border-amber-600 focus:outline-none">
                 </div>
 
-                <!-- メモ -->
                 <div>
                     <label for="visit-notes" class="block text-sm font-black text-slate-900 mb-1">メモ・先生の言葉・次回予定など</label>
                     <textarea id="visit-notes" rows="3" placeholder="気づいたことや次回の持ち物などを自由にメモ" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 font-bold text-slate-900 focus:border-teal-600 focus:outline-none"></textarea>
                 </div>
 
-                <!-- ボタン -->
                 <div class="flex items-center justify-end gap-2 pt-2 border-t-2 border-slate-100">
                     <button type="button" onclick="closeModal('visit-modal')" class="px-4 py-2.5 rounded-xl border-2 border-slate-300 font-black text-sm text-slate-700 hover:bg-slate-100">キャンセル</button>
                     <button type="submit" class="px-6 py-2.5 rounded-xl bg-teal-700 text-white font-black text-sm hover:bg-teal-800 active:scale-95 transition shadow-sm">この内容で保存する</button>
@@ -249,9 +241,7 @@
         </div>
     </div>
 
-    <!-- =========================================================
-         モーダル2: 通院記録 詳細確認モーダル
-    ========================================================== -->
+    <!-- モーダル2: 通院記録 詳細確認モーダル -->
     <div id="detail-modal" style="display:none;" class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-3 sm:p-4">
         <div class="bg-white w-full max-w-md rounded-2xl border-2 border-slate-300 shadow-2xl overflow-hidden">
             <div class="bg-slate-800 text-white px-4 py-3.5 flex items-center justify-between">
@@ -269,9 +259,7 @@
         </div>
     </div>
 
-    <!-- =========================================================
-         モーダル3: 病院管理モーダル（追加・修正・削除・全リセット）
-    ========================================================== -->
+    <!-- モーダル3: 病院管理モーダル -->
     <div id="hospital-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-lg rounded-2xl border-2 border-slate-300 shadow-2xl my-auto overflow-hidden">
             <div class="bg-slate-800 text-white px-4 py-3.5 flex items-center justify-between">
@@ -280,7 +268,6 @@
             </div>
 
             <div class="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
-                <!-- 追加・修正フォーム -->
                 <form id="hospital-form" onsubmit="handleSaveHospital(event)" class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3.5 space-y-2.5">
                     <input type="hidden" id="edit-hospital-id">
                     <div class="flex items-center justify-between">
@@ -294,13 +281,11 @@
                     <button type="submit" id="hospital-submit-btn" class="w-full py-2.5 rounded-xl bg-teal-700 text-white font-black text-sm hover:bg-teal-800 active:scale-95 transition">病院を登録する</button>
                 </form>
 
-                <!-- 登録済み病院一覧 -->
                 <div>
                     <h3 class="text-xs font-black text-slate-600 mb-2">登録済みの病院一覧</h3>
                     <div id="hospital-list-container" class="space-y-2"></div>
                 </div>
 
-                <!-- 危険操作：全データ初期化 -->
                 <div class="pt-3 border-t-2 border-slate-200">
                     <button type="button" onclick="confirmResetAllData()" class="w-full py-2.5 rounded-xl bg-rose-50 border-2 border-rose-300 text-rose-700 font-black text-xs hover:bg-rose-100 active:scale-95 transition">⚠️ 端末内の病院・通院履歴をすべて初期化する</button>
                 </div>
@@ -308,9 +293,7 @@
         </div>
     </div>
 
-    <!-- =========================================================
-         モーダル4: 定型文管理モーダル（通院理由・リハビリ内容の追加・修正・削除）
-    ========================================================== -->
+    <!-- モーダル4: 定型文管理モーダル -->
     <div id="preset-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-md rounded-2xl border-2 border-slate-300 shadow-2xl my-auto overflow-hidden">
             <div id="preset-modal-header" class="bg-blue-700 text-white px-4 py-3.5 flex items-center justify-between">
@@ -335,9 +318,7 @@
         </div>
     </div>
 
-    <!-- =========================================================
-         モーダル5: スプレッドシート連携 & CSV出力モーダル
-    ========================================================== -->
+    <!-- モーダル5: スプレッドシート連携 & CSV出力モーダル -->
     <div id="sync-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-lg rounded-2xl border-2 border-slate-300 shadow-2xl my-auto overflow-hidden">
             <div class="bg-emerald-700 text-white px-4 py-3.5 flex items-center justify-between">
@@ -345,7 +326,6 @@
                 <button type="button" onclick="closeModal('sync-modal')" class="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center font-black">✕</button>
             </div>
             <div class="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
-                <!-- GAS URL設定（独立保存） -->
                 <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3.5 space-y-2.5">
                     <label for="gas-url-input" class="block text-sm font-black text-slate-900">Google Apps Script (GAS) ウェブアプリURL</label>
                     <input type="url" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-bold text-xs sm:text-sm text-slate-900 focus:border-emerald-600 focus:outline-none">
@@ -353,7 +333,6 @@
                     <button type="button" onclick="handleSaveGasUrl()" class="w-full py-2.5 rounded-xl bg-emerald-700 text-white font-black text-sm hover:bg-emerald-800 active:scale-95 transition">連携URLを保存する</button>
                 </div>
 
-                <!-- 送信・復元ボタン -->
                 <div class="grid grid-cols-1 gap-2.5">
                     <button type="button" onclick="sendAllVisitsToSheet()" class="w-full py-3 px-4 rounded-xl bg-teal-700 text-white font-black text-sm hover:bg-teal-800 active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
                         <span>📤</span><span>現在の通院記録をスプレッドシートへ一括送信</span>
@@ -366,7 +345,6 @@
                     </button>
                 </div>
 
-                <!-- 保存状態の表示 -->
                 <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-emerald-900 space-y-1">
                     <p>💡 <strong>データ保護（二重保存）:</strong> 端末内の「IndexedDB」と「localStorage」の両方に自動保存されます。</p>
                     <p>※プライベート（シークレット）モードやLINE内ブラウザでは端末側データが消去される場合があるため、通常のChrome/Safariでのご利用をおすすめします。</p>
@@ -375,9 +353,7 @@
         </div>
     </div>
 
-    <!-- =========================================================
-         モーダル6: 独自確認ダイアログ（confirm()の完全代替）
-    ========================================================== -->
+    <!-- モーダル6: 独自確認ダイアログ -->
     <div id="confirm-modal" style="display:none;" class="fixed inset-0 z-[60] bg-slate-900/70 backdrop-blur-xs items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-2xl border-2 border-slate-300 shadow-2xl overflow-hidden">
             <div class="p-5 space-y-2.5">
@@ -391,9 +367,7 @@
         </div>
     </div>
 
-    <!-- =========================================================
-         モーダル7: 独自完了アラートダイアログ（alert()の完全代替）
-    ========================================================== -->
+    <!-- モーダル7: 独自完了アラートダイアログ -->
     <div id="alert-modal" style="display:none;" class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-xs items-center justify-center p-4">
         <div class="bg-white w-full max-w-xs sm:max-w-sm rounded-2xl border-2 border-slate-300 shadow-2xl overflow-hidden text-center">
             <div class="p-6 space-y-3">
@@ -408,18 +382,14 @@
     </div>
 
     <script>
-        /* =========================================================
-           1. 定数・グローバル状態
-        ========================================================== */
         const STORAGE_KEYS = {
             DATA: 'hospital_tracker_data_v1',
-            GAS_URL: 'hospital_tracker_gas_url_v1' // URLは完全に独立したキーで保存
+            GAS_URL: 'hospital_tracker_gas_url_v1'
         };
 
         const DEFAULT_REASON_PRESETS = ['定期検診', '経過観察', '処方箋の受取', '痛み・症状の相談', '検査結果の確認'];
         const DEFAULT_REHAB_PRESETS = ['ストレッチ・可動域訓練', '筋力トレーニング', '電気・温熱治療', '歩行・バランス訓練', 'マッサージ・手技'];
 
-        // アプリのメインデータ（初期病院リストは空：ダミー病院なし）
         let appData = {
             hospitals: [],
             visits: [],
@@ -428,16 +398,12 @@
         };
 
         let savedGasUrl = '';
-        let memoryFallback = {}; // ストレージ制限時のメモリフォールバック
-
-        let currentView = 'calendar'; // 'calendar' | 'list'
+        let memoryFallback = {};
+        let currentView = 'calendar';
         let currentYear = new Date().getFullYear();
-        let currentMonth = new Date().getMonth(); // 0-11
+        let currentMonth = new Date().getMonth();
         let confirmCallback = null;
 
-        /* =========================================================
-           2. 安全な永続化ストレージ（IndexedDB + localStorage + メモリ）
-        ========================================================== */
         const IDB_NAME = 'HospitalTrackerDB';
         const IDB_STORE = 'kvStore';
 
@@ -496,21 +462,17 @@
             try {
                 localStorage.setItem(key, valueStr);
                 lsOk = true;
-            } catch (e) {
-                // プライベートモード等でブロックされても続行
-            }
+            } catch (e) {}
             const idbOk = await idbSet(key, valueStr);
-            return lsOk || idbOk || true; // メモリ保持も含め安全に継続
+            return lsOk || idbOk || true;
         }
 
         async function safeGetItem(key) {
-            // まずIndexedDBから取得を試みる（より永続性が高い）
             const idbVal = await idbGet(key);
             if (typeof idbVal === 'string' && idbVal.length > 0) {
                 try { localStorage.setItem(key, idbVal); } catch (e) {}
                 return idbVal;
             }
-            // 次にlocalStorageから取得
             try {
                 const lsVal = localStorage.getItem(key);
                 if (typeof lsVal === 'string' && lsVal.length > 0) {
@@ -527,12 +489,9 @@
         }
 
         async function loadAllData() {
-            // 永続化ストレージをブラウザにリクエスト
             if (navigator.storage && navigator.storage.persist) {
                 try { await navigator.storage.persist(); } catch (e) {}
             }
-
-            // メインデータの読み込み
             try {
                 const rawData = await safeGetItem(STORAGE_KEYS.DATA);
                 if (rawData) {
@@ -545,8 +504,6 @@
             } catch (err) {
                 console.error('データ読み込みエラー:', err);
             }
-
-            // GAS URLの読み込み（独立キー）
             try {
                 const rawUrl = await safeGetItem(STORAGE_KEYS.GAS_URL);
                 if (rawUrl) {
@@ -557,9 +514,6 @@
             }
         }
 
-        /* =========================================================
-           3. 通知UI（トースト & 中央アラート & 確認モーダル）
-        ========================================================== */
         function showToast(message, isSuccess = true) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -619,9 +573,6 @@
             return err.message ? err.message : String(err);
         }
 
-        /* =========================================================
-           4. ユーティリティ関数
-        ========================================================== */
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
             return String(str)
@@ -646,13 +597,9 @@
             return appData.hospitals.find(h => h.id === id) || null;
         }
 
-        /* =========================================================
-           5. 画面描画（ヘッダー・フィルター・カレンダー・一覧）
-        ========================================================== */
         function updateHospitalSelects() {
             const filterEl = document.getElementById('hospital-filter');
             const currentFilter = filterEl.value;
-
             filterEl.innerHTML = '<option value="all">すべての病院</option>';
             appData.hospitals.forEach(h => {
                 const opt = document.createElement('option');
@@ -664,7 +611,6 @@
                 filterEl.value = currentFilter;
             }
 
-            // フォーム内の病院プルダウンも更新
             const formSelect = document.getElementById('visit-hospital');
             const currentFormVal = formSelect.value;
             formSelect.innerHTML = '<option value="">病院を選択してください</option>';
@@ -678,7 +624,6 @@
                 formSelect.value = currentFormVal;
             }
 
-            // 未登録バナーの表示制御
             const banner = document.getElementById('no-hospital-banner');
             if (appData.hospitals.length === 0) {
                 banner.classList.remove('hidden');
@@ -771,7 +716,6 @@
         function getFilteredVisits(forAllPeriod = false) {
             const filterHospitalId = document.getElementById('hospital-filter').value;
             const monthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-
             return appData.visits.filter(v => {
                 if (filterHospitalId !== 'all' && v.hospitalId !== filterHospitalId) return false;
                 if (!forAllPeriod && (!v.date || !v.date.startsWith(monthPrefix))) return false;
@@ -779,7 +723,7 @@
             }).sort((a, b) => {
                 const da = `${a.date || ''} ${a.time || ''}`;
                 const db = `${b.date || ''} ${b.time || ''}`;
-                return db.localeCompare(da); // 新しい順
+                return db.localeCompare(da);
             });
         }
 
@@ -799,14 +743,12 @@
                 visitsByDate[v.date].push(v);
             });
 
-            // 先頭の空白セル
             for (let i = 0; i < firstDayOfWeek; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.className = 'cal-cell rounded-xl bg-slate-100/60 border border-slate-200/60';
                 grid.appendChild(emptyCell);
             }
 
-            // 日付セル
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateISO = formatDateISO(currentYear, currentMonth, day);
                 const dayOfWeek = (firstDayOfWeek + day - 1) % 7;
@@ -819,14 +761,12 @@
                 }`;
                 cell.onclick = () => openVisitModal(dateISO);
 
-                // 日付番号
                 const dayNumColor = dayOfWeek === 0 ? 'text-rose-600' : (dayOfWeek === 6 ? 'text-blue-600' : 'text-slate-800');
                 const headerDiv = document.createElement('div');
                 headerDiv.className = 'flex items-center justify-between';
                 headerDiv.innerHTML = `<span class="text-xs sm:text-sm font-black ${dayNumColor} ${isToday ? 'bg-teal-700 text-white px-1.5 py-0.5 rounded-md leading-none' : ''}">${day}</span>`;
                 cell.appendChild(headerDiv);
 
-                // その日の予定バッジ
                 dayVisits.forEach(v => {
                     const h = getHospitalById(v.hospitalId);
                     const hName = h ? h.name : (v.hospitalName || '未設定の病院');
@@ -910,9 +850,6 @@
             }).join('');
         }
 
-        /* =========================================================
-           6. 通院記録の追加・詳細・修正・削除
-        ========================================================== */
         function openVisitModal(defaultDateISO = null) {
             updateHospitalSelects();
             updatePresetSelects();
@@ -1061,9 +998,6 @@
             );
         }
 
-        /* =========================================================
-           7. 病院管理（追加・修正・削除・全リセット）
-        ========================================================== */
         function openHospitalModal() {
             resetHospitalForm();
             renderHospitalList();
@@ -1193,9 +1127,6 @@
             );
         }
 
-        /* =========================================================
-           8. 定型文管理（通院理由・リハビリ内容の追加・修正・削除）
-        ========================================================== */
         function openPresetModal(type) {
             document.getElementById('preset-type').value = type;
             const header = document.getElementById('preset-modal-header');
@@ -1314,9 +1245,6 @@
             `).join('');
         }
 
-        /* =========================================================
-           9. スプレッドシート連携（GAS URL保存・一括送信・復元・CSV）
-        ========================================================== */
         function openSyncModal() {
             document.getElementById('gas-url-input').value = savedGasUrl || '';
             document.getElementById('sync-modal').style.display = 'flex';
@@ -1326,7 +1254,6 @@
             try {
                 const url = document.getElementById('gas-url-input').value.trim();
                 savedGasUrl = url;
-                // URLのみを独立キーで保存（appDataには一切触れない）
                 await safeSetItem(STORAGE_KEYS.GAS_URL, savedGasUrl);
                 showToast('連携URLを保存しました', true);
                 showAlertModal('保存しました', url ? 'スプレッドシート連携URLを保存しました。\n既存の病院や通院記録はそのまま保持されています。' : '連携URLをクリアしました。', true);
@@ -1387,15 +1314,35 @@
                 showAlertModal('URLが未設定です', '先にGoogle Apps ScriptのウェブアプリURLを入力して保存してください。', false);
                 return;
             }
+            if (!savedGasUrl.includes('/exec')) {
+                showAlertModal('URLの形式エラー', 'GASのウェブアプリURLは末尾が「/exec」のものを入力してください。', false);
+                return;
+            }
             showConfirm(
                 'スプレッドシートから復元',
                 'スプレッドシートに保存されている病院・通院履歴を読み込んで端末へ復元しますか？',
                 async () => {
                     try {
                         showToast('スプレッドシートからデータを取得中...', true);
-                        const res = await fetch(savedGasUrl, { method: 'GET' });
+                        const res = await fetch(savedGasUrl, {
+                            method: 'GET',
+                            redirect: 'follow'
+                        });
                         if (!res.ok) throw new Error(`HTTPエラー (${res.status})`);
-                        const json = await res.json();
+
+                        const rawText = await res.text();
+                        let json;
+                        try {
+                            json = JSON.parse(rawText);
+                        } catch (parseErr) {
+                            if (rawText.includes('doGet')) {
+                                throw new Error('GAS側に復元用コード（doGet）が反映されていません。GASを「新バージョン」で再デプロイしてください。');
+                            }
+                            if (rawText.includes('ServiceLogin') || rawText.includes('accounts.google.com')) {
+                                throw new Error('GASのアクセス権限が「全員」になっていないため取得できませんでした。');
+                            }
+                            throw new Error('GASから正しいデータが返されませんでした。URLとデプロイ設定（新バージョン・全員）をご確認ください。');
+                        }
 
                         if (json.status !== 'success') {
                             throw new Error(json.message || 'GAS側でエラーが発生しました');
@@ -1404,21 +1351,18 @@
                         const sheetHospitals = Array.isArray(json.hospitals) ? json.hospitals : [];
                         const sheetVisits = Array.isArray(json.visits) ? json.visits : [];
 
-                        // 病院をマージ（重複名チェック）
                         sheetHospitals.forEach(sh => {
                             if (!appData.hospitals.some(h => h.id === sh.id || h.name === sh.name)) {
                                 appData.hospitals.push(sh);
                             }
                         });
 
-                        // 通院履歴を置き換え・マージ
                         let addedCount = 0;
                         sheetVisits.forEach(sv => {
                             const exists = appData.visits.some(v =>
                                 v.date === sv.date && v.time === sv.time && v.reason === sv.reason && v.rehab === sv.rehab
                             );
                             if (!exists) {
-                                // 病院IDの紐付けを名前ベースでも補正
                                 const matchedH = appData.hospitals.find(h => h.id === sv.hospitalId || ('h_' + h.name) === sv.hospitalId);
                                 if (matchedH) sv.hospitalId = matchedH.id;
                                 appData.visits.push(sv);
@@ -1432,8 +1376,8 @@
                         showToast(`スプレッドシートから${addedCount}件復元しました`, true);
                         showAlertModal('復元しました', `スプレッドシートからデータを取得しました。\n新しく追加された記録：${addedCount}件`, true);
                     } catch (err) {
-                        showToast('復元できませんでした: ' + getErrorReason(err), false);
-                        showAlertModal('復元できませんでした', 'スプレッドシートからの取得に失敗しました。\nGAS側のデプロイ設定（アクセスできるユーザー：全員）をご確認ください。\n\n詳細: ' + getErrorReason(err), false);
+                        showToast('復元できませんでした', false);
+                        showAlertModal('復元できませんでした', getErrorReason(err), false);
                     }
                 }
             );
@@ -1477,9 +1421,6 @@
             }
         }
 
-        /* =========================================================
-           10. 初期化処理
-        ========================================================== */
         document.getElementById('confirm-ok-btn').onclick = function() {
             closeConfirmModal(true);
         };
