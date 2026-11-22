@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通院・リハビリ管理帳 v1.9.5</title>
+    <title>通院・リハビリ管理帳 v1.9.6</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -61,7 +61,7 @@
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">通院・リハビリ管理帳</h1>
-                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.9.5</span>
+                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.9.6</span>
                         </div>
                         <p class="text-xs font-bold text-slate-600 mt-0.5">文字くっきり・スマホ最適化版</p>
                     </div>
@@ -204,7 +204,7 @@
                 <button type="button" onclick="closeModal('visit-modal')" class="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center font-black">✕</button>
             </div>
 
-            <form id="visit-form" onsubmit="handleSaveVisit(event)" class="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
+            <form id="visit-form" onsubmit="handleSaveVisit(event)" class="px-4 pt-4 space-y-4 max-h-[calc(100dvh-7rem)] overflow-y-auto">
                 <input type="hidden" id="visit-id">
 
                 <div>
@@ -261,9 +261,9 @@
                     <textarea id="visit-notes" rows="3" placeholder="気づいたことや次回の持ち物などを自由にメモ" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 font-bold text-slate-900 focus:border-teal-600 focus:outline-none"></textarea>
                 </div>
 
-                <div class="flex items-center justify-end gap-2 pt-2 border-t-2 border-slate-100">
-                    <button type="button" onclick="closeModal('visit-modal')" class="px-4 py-2.5 rounded-xl border-2 border-slate-300 font-black text-sm text-slate-700 hover:bg-slate-100">キャンセル</button>
-                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-teal-700 text-white font-black text-sm hover:bg-teal-800 active:scale-95 transition shadow-sm">この内容で保存する</button>
+                <div class="sticky bottom-0 z-10 -mx-4 px-4 py-3 bg-white border-t-2 border-slate-400 flex items-center gap-2 shadow-[0_-4px_10px_rgba(0,0,0,0.08)]">
+                    <button type="button" onclick="closeModal('visit-modal')" class="px-4 py-3 rounded-xl border-2 border-slate-500 font-black text-sm text-slate-900 bg-white hover:bg-slate-100">キャンセル</button>
+                    <button type="submit" class="flex-1 py-3 rounded-xl bg-teal-700 text-white font-black text-base border-2 border-teal-900 hover:bg-teal-800 active:scale-95 transition shadow-sm">✓ この内容で保存する</button>
                 </div>
             </form>
         </div>
@@ -1049,6 +1049,22 @@
                     visitSel.value = prevVisit;
                 }
             }
+        }
+
+        // 通院履歴で使われた言葉を「よく使う」一覧に戻す（一覧が消えた場合の復旧）
+        function rebuildPresetsFromHistory() {
+            let added = 0;
+            const pick = (text, list) => {
+                String(text || '').split(/[、,，\n]/).map(x => x.trim()).filter(x => x && x.length <= 30).forEach(x => {
+                    if (!list.includes(x)) { list.push(x); added++; }
+                });
+            };
+            appData.visits.forEach(v => {
+                pick(v.reason, appData.reasonPresets);
+                pick(v.rehab, appData.rehabPresets);
+            });
+            if (added > 0) markMetaDirty();
+            return added;
         }
 
         function updatePresetSelects() {
@@ -2106,6 +2122,7 @@
         }
 
         function refreshAfterSync() {
+            if (rebuildPresetsFromHistory() > 0) persistOnly();
             updateHospitalSelects();
             updatePresetSelects();
             ensureVisibleMonth();
@@ -2661,6 +2678,7 @@
         window.onload = async function() {
             try {
                 await loadAllData();
+                if (rebuildPresetsFromHistory() > 0) await persistOnly();
                 updateHospitalSelects();
                 updatePresetSelects();
                 ensureVisibleMonth();
