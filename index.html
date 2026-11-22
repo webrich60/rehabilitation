@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通院・リハビリ管理帳 v1.7.0</title>
+    <title>通院・リハビリ管理帳 v1.8.1</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -61,7 +61,7 @@
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">通院・リハビリ管理帳</h1>
-                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.7.0</span>
+                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.8.1</span>
                         </div>
                         <p class="text-xs font-bold text-slate-600 mt-0.5">文字くっきり・スマホ最適化版</p>
                     </div>
@@ -89,6 +89,28 @@
 
     <!-- メインコンテンツ -->
     <main class="max-w-4xl mx-auto px-3 sm:px-5 pt-4 space-y-4">
+
+        <!-- 保存データ状況バー -->
+        <div id="data-status-bar" class="bg-white rounded-2xl border-2 border-slate-200 px-3.5 py-2.5 shadow-xs flex flex-wrap items-center justify-between gap-2 text-xs font-black">
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 border border-teal-200 text-teal-900">
+                    <span>💾</span>
+                    <span id="status-counts-text">保存中：病院 0件 / 履歴 0件</span>
+                </span>
+                <span id="status-gas-badge" class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800">
+                    <span>☁️</span><span>スプレッドシート自動同期ON</span>
+                </span>
+            </div>
+            <button type="button" id="jump-latest-btn" onclick="jumpToLatestVisitMonth()" class="hidden px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:scale-95 transition">
+                最新の記録月へ移動 →
+            </button>
+        </div>
+
+        <!-- ストレージ制限警告バナー -->
+        <div id="storage-warning-banner" class="hidden bg-rose-50 border-2 border-rose-300 rounded-2xl p-3.5 text-xs font-bold text-rose-900 space-y-1.5">
+            <p class="font-black text-rose-950">⚠️ このブラウザでは端末への保存が制限されています</p>
+            <p>プライベート（シークレット）モードやLINE等のアプリ内ブラウザでは、閉じるとデータが消えます。「スプレッドシート連携」から<strong>専用ブックマークURLをコピー</strong>して、通常のChrome/Safariで開いてください。</p>
+        </div>
 
         <!-- コントロールパネル -->
         <section class="bg-white rounded-2xl border-2 border-slate-200 p-3 sm:p-4 shadow-sm space-y-3">
@@ -329,8 +351,15 @@
                 <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3.5 space-y-2.5">
                     <label for="gas-url-input" class="block text-sm font-black text-slate-900">Google Apps Script (GAS) ウェブアプリURL</label>
                     <input type="url" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-bold text-xs sm:text-sm text-slate-900 focus:border-emerald-600 focus:outline-none">
-                    <p class="text-xs font-bold text-slate-600">※URLのみを独立して保存します。既存の病院や通院履歴が消えることはありません。</p>
-                    <button type="button" onclick="handleSaveGasUrl()" class="w-full py-2.5 rounded-xl bg-emerald-700 text-white font-black text-sm hover:bg-emerald-800 active:scale-95 transition">連携URLを保存する</button>
+                    <label class="flex items-center gap-2 text-xs font-black text-slate-800 cursor-pointer select-none pt-1">
+                        <input type="checkbox" id="auto-sync-checkbox" onchange="handleToggleAutoSync()" class="w-4 h-4 accent-emerald-700 rounded">
+                        <span>サイトを開いたときにスプレッドシートから自動で履歴を読み込む（消去防止）</span>
+                    </label>
+                    <p class="text-xs font-bold text-slate-600">※URLは端末ストレージ・Cookie・アドレスバーの4重で保護されます。既存の病院や通院履歴が消えることはありません。</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button type="button" onclick="handleSaveGasUrl()" class="w-full py-2.5 rounded-xl bg-emerald-700 text-white font-black text-sm hover:bg-emerald-800 active:scale-95 transition">連携URLを保存する</button>
+                        <button type="button" onclick="copyBookmarkUrl()" class="w-full py-2.5 rounded-xl bg-white border-2 border-emerald-500 text-emerald-900 font-black text-xs sm:text-sm hover:bg-emerald-50 active:scale-95 transition">🔗 消えない専用URLをコピー</button>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 gap-2.5">
@@ -401,7 +430,8 @@
     <script>
         const STORAGE_KEYS = {
             DATA: 'hospital_tracker_data_v1',
-            GAS_URL: 'hospital_tracker_gas_url_v1'
+            GAS_URL: 'hospital_tracker_gas_url_v1',
+            AUTO_SYNC: 'hospital_tracker_auto_sync_v1'
         };
 
         const DEFAULT_REASON_PRESETS = ['定期検診', '経過観察', '処方箋の受取', '痛み・症状の相談', '検査結果の確認'];
@@ -415,6 +445,8 @@
         };
 
         let savedGasUrl = '';
+        let autoSyncEnabled = true;
+        let storageRestricted = false;
         let memoryFallback = {};
         let currentView = 'calendar';
         let currentYear = new Date().getFullYear();
@@ -423,6 +455,54 @@
 
         const IDB_NAME = 'HospitalTrackerDB';
         const IDB_STORE = 'kvStore';
+
+        function setCookie(name, value, days = 365) {
+            try {
+                const maxAge = days * 24 * 60 * 60;
+                document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; max-age=${maxAge}; path=/; SameSite=Lax`;
+            } catch (e) {}
+        }
+
+        function getCookie(name) {
+            try {
+                const prefix = encodeURIComponent(name) + '=';
+                const parts = document.cookie.split(';');
+                for (let part of parts) {
+                    part = part.trim();
+                    if (part.startsWith(prefix)) {
+                        return decodeURIComponent(part.slice(prefix.length));
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function getGasUrlFromLocation() {
+            try {
+                const searchParams = new URLSearchParams(window.location.search);
+                const fromQuery = searchParams.get('gas');
+                if (fromQuery && fromQuery.startsWith('http')) return fromQuery.trim();
+                const hash = window.location.hash || '';
+                if (hash.includes('gas=')) {
+                    const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+                    const fromHash = hashParams.get('gas');
+                    if (fromHash && fromHash.startsWith('http')) return fromHash.trim();
+                }
+            } catch (e) {}
+            return '';
+        }
+
+        function syncGasUrlToAddressBar(url) {
+            try {
+                if (!window.history || !window.history.replaceState) return;
+                const base = window.location.pathname + window.location.search;
+                if (url) {
+                    window.history.replaceState(null, '', `${base}#gas=${encodeURIComponent(url)}`);
+                } else {
+                    window.history.replaceState(null, '', base);
+                }
+            } catch (e) {}
+        }
 
         function openIDB() {
             return new Promise((resolve, reject) => {
@@ -478,36 +558,49 @@
             let lsOk = false;
             try {
                 localStorage.setItem(key, valueStr);
-                lsOk = true;
+                lsOk = (localStorage.getItem(key) === valueStr);
             } catch (e) {}
             const idbOk = await idbSet(key, valueStr);
+            if (!lsOk && !idbOk) {
+                storageRestricted = true;
+                updateDataStatusBar();
+            }
             return lsOk || idbOk || true;
         }
 
         async function safeGetItem(key) {
+            let lsVal = null;
+            try {
+                lsVal = localStorage.getItem(key);
+            } catch (e) {}
             const idbVal = await idbGet(key);
+            if (typeof lsVal === 'string' && lsVal.length > 0 && (!idbVal || lsVal.length >= idbVal.length)) {
+                if (idbVal !== lsVal) await idbSet(key, lsVal);
+                return lsVal;
+            }
             if (typeof idbVal === 'string' && idbVal.length > 0) {
                 try { localStorage.setItem(key, idbVal); } catch (e) {}
                 return idbVal;
             }
-            try {
-                const lsVal = localStorage.getItem(key);
-                if (typeof lsVal === 'string' && lsVal.length > 0) {
-                    await idbSet(key, lsVal);
-                    return lsVal;
-                }
-            } catch (e) {}
             return memoryFallback[key] || null;
         }
 
         async function saveAppData() {
             const serialized = JSON.stringify(appData);
             await safeSetItem(STORAGE_KEYS.DATA, serialized);
+            updateDataStatusBar();
         }
 
         async function loadAllData() {
             if (navigator.storage && navigator.storage.persist) {
                 try { await navigator.storage.persist(); } catch (e) {}
+            }
+            try {
+                const testKey = '__ht_storage_test__';
+                localStorage.setItem(testKey, '1');
+                localStorage.removeItem(testKey);
+            } catch (e) {
+                storageRestricted = true;
             }
             try {
                 const rawData = await safeGetItem(STORAGE_KEYS.DATA);
@@ -522,72 +615,22 @@
                 console.error('データ読み込みエラー:', err);
             }
             try {
+                const urlFromLocation = getGasUrlFromLocation();
                 const rawUrl = await safeGetItem(STORAGE_KEYS.GAS_URL);
-                if (rawUrl) {
-                    savedGasUrl = rawUrl.trim();
+                const cookieUrl = getCookie(STORAGE_KEYS.GAS_URL);
+                savedGasUrl = (urlFromLocation || rawUrl || cookieUrl || '').trim();
+                if (savedGasUrl) {
+                    await safeSetItem(STORAGE_KEYS.GAS_URL, savedGasUrl);
+                    setCookie(STORAGE_KEYS.GAS_URL, savedGasUrl, 365);
+                    syncGasUrlToAddressBar(savedGasUrl);
                 }
             } catch (err) {
                 console.error('URL読み込みエラー:', err);
             }
-        }
-
-        function showToast(message, isSuccess = true) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast-enter pointer-events-auto px-4 py-3 rounded-2xl shadow-lg border-2 font-black text-sm flex items-center gap-2 ${
-                isSuccess
-                    ? 'bg-emerald-600 border-emerald-700 text-white'
-                    : 'bg-rose-600 border-rose-700 text-white'
-            }`;
-            toast.innerHTML = `
-                <span class="text-base shrink-0">${isSuccess ? '✓' : '✕'}</span>
-                <span class="flex-1">${escapeHtml(message)}</span>
-            `;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.25s ease';
-                setTimeout(() => toast.remove(), 260);
-            }, 3000);
-        }
-
-        function showAlertModal(title, message, isSuccess = true) {
-            const iconEl = document.getElementById('alert-icon');
-            iconEl.innerText = isSuccess ? '✓' : '✕';
-            iconEl.className = `w-14 h-14 mx-auto rounded-full flex items-center justify-center text-3xl font-black ${
-                isSuccess ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-            }`;
-            document.getElementById('alert-title').innerText = title;
-            document.getElementById('alert-message').innerText = message;
-            document.getElementById('alert-modal').style.display = 'flex';
-        }
-
-        function showConfirm(title, message, onOk) {
-            document.getElementById('confirm-title').innerText = title;
-            document.getElementById('confirm-message').innerText = message;
-            confirmCallback = onOk;
-            document.getElementById('confirm-modal').style.display = 'flex';
-        }
-
-        function closeConfirmModal(isConfirmed) {
-            document.getElementById('confirm-modal').style.display = 'none';
-            if (isConfirmed && typeof confirmCallback === 'function') {
-                const cb = confirmCallback;
-                confirmCallback = null;
-                cb();
-            } else {
-                confirmCallback = null;
-            }
-        }
-
-        function closeModal(id) {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        }
-
-        function getErrorReason(err) {
-            if (!err) return '不明なエラー';
-            return err.message ? err.message : String(err);
+            try {
+                const rawAuto = await safeGetItem(STORAGE_KEYS.AUTO_SYNC);
+                autoSyncEnabled = (rawAuto !== 'false');
+            } catch (e) {}
         }
 
         function escapeHtml(str) {
@@ -597,108 +640,206 @@
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+                .replace(/'/g, '&#039;');
         }
 
-        function generateId(prefix) {
-            return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        function generateId(prefix = 'id') {
+            return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
         }
 
         function formatDateISO(year, monthIndex, day) {
-            const m = String(monthIndex + 1).padStart(2, '0');
-            const d = String(day).padStart(2, '0');
-            return `${year}-${m}-${d}`;
+            return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         }
 
         function getHospitalById(id) {
             return appData.hospitals.find(h => h.id === id) || null;
         }
 
+        function getErrorReason(err) {
+            if (!err) return '不明なエラーが発生しました';
+            if (typeof err === 'string') return err;
+            return err.message || String(err);
+        }
+
+        function showToast(message, isSuccess = true) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast-enter pointer-events-auto rounded-2xl px-4 py-3 shadow-lg border-2 font-black text-xs sm:text-sm flex items-center gap-2 ${
+                isSuccess
+                    ? 'bg-emerald-700 border-emerald-800 text-white'
+                    : 'bg-rose-600 border-rose-800 text-white'
+            }`;
+            toast.innerHTML = `<span class="text-base leading-none">${isSuccess ? '✓' : '✕'}</span><span class="flex-1 break-words">${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.25s ease';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 260);
+            }, 3200);
+        }
+
+        function showAlertModal(title, message, isSuccess = true) {
+            const icon = document.getElementById('alert-icon');
+            const titleEl = document.getElementById('alert-title');
+            const msgEl = document.getElementById('alert-message');
+            if (icon) {
+                icon.textContent = isSuccess ? '✓' : '✕';
+                icon.className = `w-14 h-14 mx-auto rounded-full flex items-center justify-center text-3xl font-black ${
+                    isSuccess ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                }`;
+            }
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl) msgEl.textContent = message;
+            const modal = document.getElementById('alert-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function showConfirm(title, message, onConfirm) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            confirmCallback = onConfirm;
+            document.getElementById('confirm-modal').style.display = 'flex';
+        }
+
+        function closeConfirmModal(confirmed) {
+            document.getElementById('confirm-modal').style.display = 'none';
+            const cb = confirmCallback;
+            confirmCallback = null;
+            if (confirmed && typeof cb === 'function') {
+                cb();
+            }
+        }
+
+        function closeModal(modalId) {
+            const el = document.getElementById(modalId);
+            if (el) el.style.display = 'none';
+        }
+
         function updateHospitalSelects() {
-            const filterEl = document.getElementById('hospital-filter');
-            const currentFilter = filterEl.value;
-            filterEl.innerHTML = '<option value="all">すべての病院</option>';
-            appData.hospitals.forEach(h => {
-                const opt = document.createElement('option');
-                opt.value = h.id;
-                opt.textContent = h.dept ? `${h.name}（${h.dept}）` : h.name;
-                filterEl.appendChild(opt);
-            });
-            if ([...filterEl.options].some(o => o.value === currentFilter)) {
-                filterEl.value = currentFilter;
-            }
-
-            const formSelect = document.getElementById('visit-hospital');
-            const currentFormVal = formSelect.value;
-            formSelect.innerHTML = '<option value="">病院を選択してください</option>';
-            appData.hospitals.forEach(h => {
-                const opt = document.createElement('option');
-                opt.value = h.id;
-                opt.textContent = h.dept ? `${h.name}（${h.dept}）` : h.name;
-                formSelect.appendChild(opt);
-            });
-            if ([...formSelect.options].some(o => o.value === currentFormVal)) {
-                formSelect.value = currentFormVal;
-            }
-
+            const filterSel = document.getElementById('hospital-filter');
+            const visitSel = document.getElementById('visit-hospital');
             const banner = document.getElementById('no-hospital-banner');
-            if (appData.hospitals.length === 0) {
-                banner.classList.remove('hidden');
-            } else {
-                banner.classList.add('hidden');
+
+            if (banner) {
+                if (appData.hospitals.length === 0) banner.classList.remove('hidden');
+                else banner.classList.add('hidden');
+            }
+
+            if (filterSel) {
+                const prevFilter = filterSel.value;
+                filterSel.innerHTML = '<option value="all">すべての病院</option>' +
+                    appData.hospitals.map(h =>
+                        `<option value="${escapeHtml(h.id)}">${escapeHtml(h.name)}${h.dept ? '（' + escapeHtml(h.dept) + '）' : ''}</option>`
+                    ).join('');
+                if (prevFilter && (prevFilter === 'all' || appData.hospitals.some(h => h.id === prevFilter))) {
+                    filterSel.value = prevFilter;
+                }
+            }
+
+            if (visitSel) {
+                const prevVisit = visitSel.value;
+                visitSel.innerHTML = '<option value="">病院を選択してください</option>' +
+                    appData.hospitals.map(h =>
+                        `<option value="${escapeHtml(h.id)}">${escapeHtml(h.name)}${h.dept ? '（' + escapeHtml(h.dept) + '）' : ''}</option>`
+                    ).join('');
+                if (prevVisit && appData.hospitals.some(h => h.id === prevVisit)) {
+                    visitSel.value = prevVisit;
+                }
             }
         }
 
         function updatePresetSelects() {
             const reasonSel = document.getElementById('visit-reason-select');
-            reasonSel.innerHTML = '<option value="">よく使う理由から選ぶ...</option>';
-            appData.reasonPresets.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item;
-                opt.textContent = item;
-                reasonSel.appendChild(opt);
-            });
-
             const rehabSel = document.getElementById('visit-rehab-select');
-            rehabSel.innerHTML = '<option value="">よく使うリハビリから選ぶ...</option>';
-            appData.rehabPresets.forEach(item => {
-                const opt = document.createElement('option');
-                opt.value = item;
-                opt.textContent = item;
-                rehabSel.appendChild(opt);
-            });
+            if (reasonSel) {
+                reasonSel.innerHTML = '<option value="">よく使う理由から選ぶ...</option>' +
+                    appData.reasonPresets.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+            }
+            if (rehabSel) {
+                rehabSel.innerHTML = '<option value="">よく使うリハビリから選ぶ...</option>' +
+                    appData.rehabPresets.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+            }
         }
 
         function applyPresetToInput(selectId, inputId) {
             const sel = document.getElementById(selectId);
             const inp = document.getElementById(inputId);
-            if (!sel.value) return;
-            if (inp.value.trim()) {
-                inp.value = `${inp.value.trim()}、${sel.value}`;
-            } else {
+            if (!sel || !inp || !sel.value) return;
+            const current = inp.value.trim();
+            if (!current) {
                 inp.value = sel.value;
+            } else if (!current.includes(sel.value)) {
+                inp.value = `${current}、${sel.value}`;
             }
             sel.value = '';
         }
 
-        function switchView(view) {
-            currentView = view;
+        function switchView(viewName) {
+            currentView = viewName;
+            const calSection = document.getElementById('view-calendar');
+            const listSection = document.getElementById('view-list');
             const tabCal = document.getElementById('tab-calendar');
             const tabList = document.getElementById('tab-list');
-            const secCal = document.getElementById('view-calendar');
-            const secList = document.getElementById('view-list');
 
-            if (view === 'calendar') {
+            if (viewName === 'calendar') {
+                calSection.classList.remove('hidden');
+                listSection.classList.add('hidden');
                 tabCal.className = 'py-2.5 px-3 rounded-lg font-black text-sm transition flex items-center justify-center gap-1.5 bg-teal-700 text-white shadow-sm';
                 tabList.className = 'py-2.5 px-3 rounded-lg font-black text-sm transition flex items-center justify-center gap-1.5 text-slate-700 hover:bg-white/70';
-                secCal.classList.remove('hidden');
-                secList.classList.add('hidden');
             } else {
+                calSection.classList.add('hidden');
+                listSection.classList.remove('hidden');
                 tabList.className = 'py-2.5 px-3 rounded-lg font-black text-sm transition flex items-center justify-center gap-1.5 bg-teal-700 text-white shadow-sm';
                 tabCal.className = 'py-2.5 px-3 rounded-lg font-black text-sm transition flex items-center justify-center gap-1.5 text-slate-700 hover:bg-white/70';
-                secList.classList.remove('hidden');
-                secCal.classList.add('hidden');
             }
+            renderCurrentView();
+        }
+
+        function updateDataStatusBar() {
+            const countEl = document.getElementById('status-counts-text');
+            if (countEl) {
+                countEl.innerText = `保存中：病院 ${appData.hospitals.length}件 / 履歴 ${appData.visits.length}件`;
+            }
+            const gasBadge = document.getElementById('status-gas-badge');
+            if (gasBadge) {
+                if (savedGasUrl && autoSyncEnabled) gasBadge.classList.remove('hidden');
+                else gasBadge.classList.add('hidden');
+            }
+            const warnBanner = document.getElementById('storage-warning-banner');
+            if (warnBanner) {
+                if (storageRestricted) warnBanner.classList.remove('hidden');
+                else warnBanner.classList.add('hidden');
+            }
+            const jumpBtn = document.getElementById('jump-latest-btn');
+            if (jumpBtn) {
+                const monthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+                const hasInCurrentMonth = appData.visits.some(v => v.date && v.date.startsWith(monthPrefix));
+                const latestDate = getLatestVisitDate();
+                if (!hasInCurrentMonth && latestDate) {
+                    const parts = latestDate.split('-');
+                    jumpBtn.innerText = `最新の記録（${parseInt(parts[0], 10)}年${parseInt(parts[1], 10)}月）を表示 →`;
+                    jumpBtn.classList.remove('hidden');
+                } else {
+                    jumpBtn.classList.add('hidden');
+                }
+            }
+        }
+
+        function getLatestVisitDate() {
+            let latest = '';
+            appData.visits.forEach(v => {
+                if (v.date && /^\d{4}-\d{2}-\d{2}$/.test(v.date) && v.date > latest) latest = v.date;
+            });
+            return latest;
+        }
+
+        function jumpToLatestVisitMonth() {
+            const latest = getLatestVisitDate();
+            if (!latest) return;
+            const parts = latest.split('-');
+            currentYear = parseInt(parts[0], 10);
+            currentMonth = parseInt(parts[1], 10) - 1;
             renderCurrentView();
         }
 
@@ -728,6 +869,7 @@
             } else {
                 renderList();
             }
+            updateDataStatusBar();
         }
 
         function getFilteredVisits(forAllPeriod = false) {
@@ -1264,7 +1406,45 @@
 
         function openSyncModal() {
             document.getElementById('gas-url-input').value = savedGasUrl || '';
+            const cb = document.getElementById('auto-sync-checkbox');
+            if (cb) cb.checked = autoSyncEnabled;
             document.getElementById('sync-modal').style.display = 'flex';
+        }
+
+        async function handleToggleAutoSync() {
+            const cb = document.getElementById('auto-sync-checkbox');
+            autoSyncEnabled = !!(cb && cb.checked);
+            await safeSetItem(STORAGE_KEYS.AUTO_SYNC, autoSyncEnabled ? 'true' : 'false');
+            updateDataStatusBar();
+            showToast(autoSyncEnabled ? '起動時の自動同期をONにしました' : '起動時の自動同期をOFFにしました', true);
+        }
+
+        function copyBookmarkUrl() {
+            const inputUrl = document.getElementById('gas-url-input').value.trim() || savedGasUrl;
+            if (!inputUrl) {
+                showToast('先にGASのウェブアプリURLを入力してください', false);
+                return;
+            }
+            const base = window.location.origin + window.location.pathname;
+            const fullUrl = `${base}#gas=${encodeURIComponent(inputUrl)}`;
+            try {
+                const temp = document.createElement('textarea');
+                temp.value = fullUrl;
+                temp.style.position = 'fixed';
+                temp.style.opacity = '0';
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+                showToast('消えない専用URLをコピーしました！', true);
+                showAlertModal(
+                    '専用URLをコピーしました',
+                    'このURLをブラウザで開いてブックマーク（またはホーム画面に追加）しておくと、サイトを閉じてもGAS設定とスプレッドシートの履歴が自動で復元されます！',
+                    true
+                );
+            } catch (err) {
+                showToast('コピーに失敗しました', false);
+            }
         }
 
         async function handleSaveGasUrl() {
@@ -1272,8 +1452,11 @@
                 const url = document.getElementById('gas-url-input').value.trim();
                 savedGasUrl = url;
                 await safeSetItem(STORAGE_KEYS.GAS_URL, savedGasUrl);
+                setCookie(STORAGE_KEYS.GAS_URL, savedGasUrl, 365);
+                syncGasUrlToAddressBar(savedGasUrl);
+                updateDataStatusBar();
                 showToast('連携URLを保存しました', true);
-                showAlertModal('保存しました', url ? 'スプレッドシート連携URLを保存しました。\n既存の病院や通院記録はそのまま保持されています。' : '連携URLをクリアしました。', true);
+                showAlertModal('保存しました', url ? 'スプレッドシート連携URLを保存しました。\nアドレスバーにも自動反映されたので、このままブックマークしておくと安心です。' : '連携URLをクリアしました。', true);
             } catch (err) {
                 showToast('連携URLを保存できませんでした: ' + getErrorReason(err), false);
                 showAlertModal('保存できませんでした', getErrorReason(err), false);
@@ -1282,21 +1465,20 @@
 
         async function sendAllVisitsToSheet() {
             if (!savedGasUrl) {
-                showAlertModal('URLが未設定です', '先にGoogle Apps ScriptのウェブアプリURLを入力して「連携URLを保存する」を押してください。', false);
+                showAlertModal('URLが未設定です', '先にGoogle Apps ScriptのウェブアプリURLを入力して保存してください。', false);
                 return;
             }
             if (appData.visits.length === 0) {
                 showToast('送信する通院記録がありません', false);
                 return;
             }
-
             showConfirm(
-                'スプレッドシートへ送信',
-                `現在の通院記録（${appData.visits.length}件）をスプレッドシートへ送信して保存しますか？`,
+                'スプレッドシートへ一括送信',
+                `現在登録されている ${appData.visits.length}件 の通院記録をスプレッドシートへ送信しますか？`,
                 async () => {
-                    let successCount = 0;
                     try {
                         showToast('スプレッドシートへ送信中...', true);
+                        let sentCount = 0;
                         for (const v of appData.visits) {
                             const h = getHospitalById(v.hospitalId);
                             const payload = {
@@ -1314,16 +1496,111 @@
                                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                                 body: JSON.stringify(payload)
                             });
-                            successCount++;
+                            sentCount++;
                         }
-                        showToast(`${successCount}件をスプレッドシートへ保存しました`, true);
-                        showAlertModal('保存しました', `スプレッドシートへ ${successCount} 件の通院記録を送信・保存しました！`, true);
+                        showToast(`${sentCount}件をスプレッドシートへ保存しました`, true);
+                        showAlertModal('保存しました', `${sentCount}件の通院記録をスプレッドシートへ送信しました。`, true);
                     } catch (err) {
-                        showToast('スプレッドシートへの送信に失敗しました', false);
-                        showAlertModal('保存できませんでした', '通信エラーが発生しました。\nURLが正しいか、インターネット接続をご確認ください。\n\n詳細: ' + getErrorReason(err), false);
+                        showToast('送信できませんでした: ' + getErrorReason(err), false);
+                        showAlertModal('送信できませんでした', getErrorReason(err), false);
                     }
                 }
             );
+        }
+
+        async function executeRestoreFromSheet(isAuto = false) {
+            try {
+                if (!isAuto) showToast('スプレッドシートからデータを取得中...', true);
+                const res = await fetch(savedGasUrl, {
+                    method: 'GET',
+                    redirect: 'follow',
+                    cache: 'no-store'
+                });
+                if (!res.ok) throw new Error(`HTTPエラー (${res.status})`);
+
+                const rawText = await res.text();
+                let json;
+                try {
+                    json = JSON.parse(rawText);
+                } catch (parseErr) {
+                    if (rawText.includes('doGet')) {
+                        throw new Error('GAS側に復元用コード（doGet）が反映されていません。GASを「新バージョン」で再デプロイしてください。');
+                    }
+                    if (rawText.includes('ServiceLogin') || rawText.includes('accounts.google.com')) {
+                        throw new Error('GASのアクセス権限が「全員」になっていないため取得できませんでした。');
+                    }
+                    throw new Error('GASから正しいデータが返されませんでした。URLとデプロイ設定（新バージョン・全員）をご確認ください。');
+                }
+
+                if (json.status !== 'success') {
+                    throw new Error(json.message || 'GAS側でエラーが発生しました');
+                }
+
+                const sheetHospitals = Array.isArray(json.hospitals) ? json.hospitals : [];
+                const sheetVisits = Array.isArray(json.visits) ? json.visits : [];
+
+                sheetHospitals.forEach(sh => {
+                    if (sh.name && !appData.hospitals.some(h => h.id === sh.id || h.name === sh.name)) {
+                        appData.hospitals.push(sh);
+                    }
+                });
+
+                let addedCount = 0;
+                let latestDate = '';
+                sheetVisits.forEach(sv => {
+                    const normDate = normalizeDateStr(sv.date);
+                    const normTime = normalizeTimeStr(sv.time);
+                    const matchedH = appData.hospitals.find(h => h.id === sv.hospitalId || ('h_' + h.name) === sv.hospitalId);
+                    const hId = matchedH ? matchedH.id : sv.hospitalId;
+                    const hName = matchedH ? matchedH.name : (sv.hospitalName || '');
+
+                    const exists = appData.visits.some(v =>
+                        v.date === normDate && v.time === normTime && v.reason === (sv.reason || '') && v.rehab === (sv.rehab || '')
+                    );
+                    if (!exists && (normDate || hName || sv.reason || sv.rehab)) {
+                        appData.visits.push({
+                            id: generateId('v'),
+                            hospitalId: hId,
+                            hospitalName: hName,
+                            date: normDate,
+                            time: normTime,
+                            reason: sv.reason || '',
+                            rehab: sv.rehab || '',
+                            notes: sv.notes || ''
+                        });
+                        addedCount++;
+                        if (normDate && normDate > latestDate) latestDate = normDate;
+                    }
+                });
+
+                if (latestDate) {
+                    const parts = latestDate.split('-');
+                    if (parts.length === 3) {
+                        currentYear = parseInt(parts[0], 10);
+                        currentMonth = parseInt(parts[1], 10) - 1;
+                    }
+                }
+
+                await saveAppData();
+                updateHospitalSelects();
+                renderCurrentView();
+
+                if (isAuto) {
+                    if (addedCount > 0) {
+                        showToast(`スプレッドシートから${addedCount}件を自動復元しました`, true);
+                    }
+                } else {
+                    showToast(`スプレッドシートから${addedCount}件インポートしました`, true);
+                    showAlertModal('インポートしました', `スプレッドシートからデータを取得しました。\n新しく追加された記録：${addedCount}件`, true);
+                }
+            } catch (err) {
+                if (!isAuto) {
+                    showToast('インポートできませんでした', false);
+                    showAlertModal('インポートできませんでした', getErrorReason(err), false);
+                } else {
+                    console.warn('自動同期スキップ:', err);
+                }
+            }
         }
 
         async function restoreFromSheet() {
@@ -1339,86 +1616,7 @@
                 'スプレッドシートから復元',
                 'スプレッドシートに保存されている病院・通院履歴を読み込んで端末へ復元しますか？',
                 async () => {
-                    try {
-                        showToast('スプレッドシートからデータを取得中...', true);
-                        const res = await fetch(savedGasUrl, {
-                            method: 'GET',
-                            redirect: 'follow'
-                        });
-                        if (!res.ok) throw new Error(`HTTPエラー (${res.status})`);
-
-                        const rawText = await res.text();
-                        let json;
-                        try {
-                            json = JSON.parse(rawText);
-                        } catch (parseErr) {
-                            if (rawText.includes('doGet')) {
-                                throw new Error('GAS側に復元用コード（doGet）が反映されていません。GASを「新バージョン」で再デプロイしてください。');
-                            }
-                            if (rawText.includes('ServiceLogin') || rawText.includes('accounts.google.com')) {
-                                throw new Error('GASのアクセス権限が「全員」になっていないため取得できませんでした。');
-                            }
-                            throw new Error('GASから正しいデータが返されませんでした。URLとデプロイ設定（新バージョン・全員）をご確認ください。');
-                        }
-
-                        if (json.status !== 'success') {
-                            throw new Error(json.message || 'GAS側でエラーが発生しました');
-                        }
-
-                        const sheetHospitals = Array.isArray(json.hospitals) ? json.hospitals : [];
-                        const sheetVisits = Array.isArray(json.visits) ? json.visits : [];
-
-                        sheetHospitals.forEach(sh => {
-                            if (sh.name && !appData.hospitals.some(h => h.id === sh.id || h.name === sh.name)) {
-                                appData.hospitals.push(sh);
-                            }
-                        });
-
-                        let addedCount = 0;
-                        let latestDate = '';
-                        sheetVisits.forEach(sv => {
-                            const normDate = normalizeDateStr(sv.date);
-                            const normTime = normalizeTimeStr(sv.time);
-                            const matchedH = appData.hospitals.find(h => h.id === sv.hospitalId || ('h_' + h.name) === sv.hospitalId);
-                            const hId = matchedH ? matchedH.id : sv.hospitalId;
-                            const hName = matchedH ? matchedH.name : (sv.hospitalName || '');
-
-                            const exists = appData.visits.some(v =>
-                                v.date === normDate && v.time === normTime && v.reason === (sv.reason || '') && v.rehab === (sv.rehab || '')
-                            );
-                            if (!exists && (normDate || hName || sv.reason || sv.rehab)) {
-                                appData.visits.push({
-                                    id: generateId('v'),
-                                    hospitalId: hId,
-                                    hospitalName: hName,
-                                    date: normDate,
-                                    time: normTime,
-                                    reason: sv.reason || '',
-                                    rehab: sv.rehab || '',
-                                    notes: sv.notes || ''
-                                });
-                                addedCount++;
-                                if (normDate && normDate > latestDate) latestDate = normDate;
-                            }
-                        });
-
-                        if (latestDate) {
-                            const parts = latestDate.split('-');
-                            if (parts.length === 3) {
-                                currentYear = parseInt(parts[0], 10);
-                                currentMonth = parseInt(parts[1], 10) - 1;
-                            }
-                        }
-
-                        await saveAppData();
-                        updateHospitalSelects();
-                        renderCurrentView();
-                        showToast(`スプレッドシートから${addedCount}件インポートしました`, true);
-                        showAlertModal('インポートしました', `スプレッドシートからデータを取得しました。\n新しく追加された記録：${addedCount}件`, true);
-                    } catch (err) {
-                        showToast('インポートできませんでした', false);
-                        showAlertModal('インポートできませんでした', getErrorReason(err), false);
-                    }
+                    await executeRestoreFromSheet(false);
                 }
             );
         }
@@ -1718,7 +1916,23 @@
                 await loadAllData();
                 updateHospitalSelects();
                 updatePresetSelects();
+
+                const monthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+                const hasInCurrentMonth = appData.visits.some(v => v.date && v.date.startsWith(monthPrefix));
+                if (!hasInCurrentMonth && appData.visits.length > 0) {
+                    const latest = getLatestVisitDate();
+                    if (latest) {
+                        const parts = latest.split('-');
+                        currentYear = parseInt(parts[0], 10);
+                        currentMonth = parseInt(parts[1], 10) - 1;
+                    }
+                }
+
                 renderCurrentView();
+
+                if (savedGasUrl && savedGasUrl.includes('/exec') && autoSyncEnabled) {
+                    executeRestoreFromSheet(true);
+                }
             } catch (err) {
                 console.error('初期化エラー:', err);
                 showToast('初期化中にエラーが発生しました', false);
