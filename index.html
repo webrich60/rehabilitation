@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通院・リハビリ管理帳 v1.6.2</title>
+    <title>通院・リハビリ管理帳 v1.7.0</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -61,7 +61,7 @@
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">通院・リハビリ管理帳</h1>
-                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.6.2</span>
+                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.7.0</span>
                         </div>
                         <p class="text-xs font-bold text-slate-600 mt-0.5">文字くっきり・スマホ最適化版</p>
                     </div>
@@ -338,11 +338,28 @@
                         <span>📤</span><span>現在の通院記録をスプレッドシートへ一括送信</span>
                     </button>
                     <button type="button" onclick="restoreFromSheet()" class="w-full py-3 px-4 rounded-xl bg-blue-600 text-white font-black text-sm hover:bg-blue-700 active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
-                        <span>📥</span><span>スプレッドシートからデータを復元・取得</span>
+                        <span>📥</span><span>スプレッドシートから自動インポート（GAS連携）</span>
                     </button>
                     <button type="button" onclick="exportCSV()" class="w-full py-3 px-4 rounded-xl bg-white border-2 border-slate-300 text-slate-800 font-black text-sm hover:bg-slate-100 active:scale-95 transition flex items-center justify-center gap-2">
                         <span>📄</span><span>CSVファイルとしてダウンロード</span>
                     </button>
+                </div>
+
+                <!-- 確実なインポート（CSV読み込み ＆ コピペ取り込み） -->
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-2xl p-3.5 space-y-3">
+                    <p class="text-sm font-black text-blue-950">📂 スプレッドシートから手動インポート（GAS不要）</p>
+                    <p class="text-xs font-bold text-blue-900 leading-relaxed">
+                        GAS連携でエラーが出る場合でも、スプレッドシートからダウンロードしたCSVファイルや、表のコピー＆貼り付けで確実に履歴を取り込めます。
+                    </p>
+                    <input type="file" id="csv-import-input" accept=".csv,.tsv,.txt" class="hidden" onchange="handleCsvFileImport(event)">
+                    <button type="button" onclick="document.getElementById('csv-import-input').click()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 text-white font-black text-sm hover:bg-indigo-700 active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
+                        <span>📂</span><span>CSVファイルを選んでインポート</span>
+                    </button>
+                    <div class="pt-2 border-t border-blue-200 space-y-2">
+                        <label for="paste-import-area" class="block text-xs font-black text-blue-950">📋 または、スプレッドシートの行をコピーして下に貼り付け：</label>
+                        <textarea id="paste-import-area" rows="4" placeholder="スプレッドシートの表（ヘッダー行を含めてもOK）をそのままコピーして貼り付けてください" class="w-full px-3 py-2 rounded-xl border-2 border-blue-300 bg-white font-bold text-xs text-slate-900 focus:border-blue-600 focus:outline-none"></textarea>
+                        <button type="button" onclick="handlePasteImport()" class="w-full py-2.5 px-4 rounded-xl bg-blue-700 text-white font-black text-sm hover:bg-blue-800 active:scale-95 transition">貼り付けた履歴をインポートする</button>
+                    </div>
                 </div>
 
                 <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-emerald-900 space-y-1">
@@ -1352,35 +1369,306 @@
                         const sheetVisits = Array.isArray(json.visits) ? json.visits : [];
 
                         sheetHospitals.forEach(sh => {
-                            if (!appData.hospitals.some(h => h.id === sh.id || h.name === sh.name)) {
+                            if (sh.name && !appData.hospitals.some(h => h.id === sh.id || h.name === sh.name)) {
                                 appData.hospitals.push(sh);
                             }
                         });
 
                         let addedCount = 0;
+                        let latestDate = '';
                         sheetVisits.forEach(sv => {
+                            const normDate = normalizeDateStr(sv.date);
+                            const normTime = normalizeTimeStr(sv.time);
+                            const matchedH = appData.hospitals.find(h => h.id === sv.hospitalId || ('h_' + h.name) === sv.hospitalId);
+                            const hId = matchedH ? matchedH.id : sv.hospitalId;
+                            const hName = matchedH ? matchedH.name : (sv.hospitalName || '');
+
                             const exists = appData.visits.some(v =>
-                                v.date === sv.date && v.time === sv.time && v.reason === sv.reason && v.rehab === sv.rehab
+                                v.date === normDate && v.time === normTime && v.reason === (sv.reason || '') && v.rehab === (sv.rehab || '')
                             );
-                            if (!exists) {
-                                const matchedH = appData.hospitals.find(h => h.id === sv.hospitalId || ('h_' + h.name) === sv.hospitalId);
-                                if (matchedH) sv.hospitalId = matchedH.id;
-                                appData.visits.push(sv);
+                            if (!exists && (normDate || hName || sv.reason || sv.rehab)) {
+                                appData.visits.push({
+                                    id: generateId('v'),
+                                    hospitalId: hId,
+                                    hospitalName: hName,
+                                    date: normDate,
+                                    time: normTime,
+                                    reason: sv.reason || '',
+                                    rehab: sv.rehab || '',
+                                    notes: sv.notes || ''
+                                });
                                 addedCount++;
+                                if (normDate && normDate > latestDate) latestDate = normDate;
                             }
                         });
+
+                        if (latestDate) {
+                            const parts = latestDate.split('-');
+                            if (parts.length === 3) {
+                                currentYear = parseInt(parts[0], 10);
+                                currentMonth = parseInt(parts[1], 10) - 1;
+                            }
+                        }
 
                         await saveAppData();
                         updateHospitalSelects();
                         renderCurrentView();
-                        showToast(`スプレッドシートから${addedCount}件復元しました`, true);
-                        showAlertModal('復元しました', `スプレッドシートからデータを取得しました。\n新しく追加された記録：${addedCount}件`, true);
+                        showToast(`スプレッドシートから${addedCount}件インポートしました`, true);
+                        showAlertModal('インポートしました', `スプレッドシートからデータを取得しました。\n新しく追加された記録：${addedCount}件`, true);
                     } catch (err) {
-                        showToast('復元できませんでした', false);
-                        showAlertModal('復元できませんでした', getErrorReason(err), false);
+                        showToast('インポートできませんでした', false);
+                        showAlertModal('インポートできませんでした', getErrorReason(err), false);
                     }
                 }
             );
+        }
+
+        function normalizeDateStr(raw) {
+            if (!raw) return '';
+            const str = String(raw).trim();
+            const m = str.match(/(\d{4})[\/\-\.年](\d{1,2})[\/\-\.月](\d{1,2})/);
+            if (m) {
+                return `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
+            }
+            return str;
+        }
+
+        function normalizeTimeStr(raw) {
+            if (!raw) return '';
+            const str = String(raw).trim();
+            const m = str.match(/(\d{1,2}):(\d{2})/);
+            if (m) {
+                return `${String(m[1]).padStart(2, '0')}:${m[2]}`;
+            }
+            return str;
+        }
+
+        function parseDelimitedText(text, delimiter) {
+            const rows = [];
+            let currentRow = [];
+            let currentVal = '';
+            let inQuotes = false;
+
+            const clean = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            for (let i = 0; i < clean.length; i++) {
+                const ch = clean[i];
+                if (inQuotes) {
+                    if (ch === '"') {
+                        if (clean[i + 1] === '"') {
+                            currentVal += '"';
+                            i++;
+                        } else {
+                            inQuotes = false;
+                        }
+                    } else {
+                        currentVal += ch;
+                    }
+                } else {
+                    if (ch === '"') {
+                        inQuotes = true;
+                    } else if (ch === delimiter) {
+                        currentRow.push(currentVal.trim());
+                        currentVal = '';
+                    } else if (ch === '\n') {
+                        currentRow.push(currentVal.trim());
+                        if (currentRow.some(cell => cell !== '')) {
+                            rows.push(currentRow);
+                        }
+                        currentRow = [];
+                        currentVal = '';
+                    } else {
+                        currentVal += ch;
+                    }
+                }
+            }
+            if (currentVal !== '' || currentRow.length > 0) {
+                currentRow.push(currentVal.trim());
+                if (currentRow.some(cell => cell !== '')) {
+                    rows.push(currentRow);
+                }
+            }
+            return rows;
+        }
+
+        async function importRecordsFromRows(rows) {
+            if (!rows || rows.length === 0) {
+                showAlertModal('データが見つかりません', 'インポートできる行がありませんでした。', false);
+                return;
+            }
+
+            let startIdx = 0;
+            let colMap = null;
+            const firstRowJoined = rows[0].join(' ');
+            const hasHeader = firstRowJoined.includes('病院') || firstRowJoined.includes('通院日') || firstRowJoined.includes('リハビリ') || firstRowJoined.includes('登録日時');
+
+            if (hasHeader) {
+                startIdx = 1;
+                colMap = { hospital: -1, dept: -1, date: -1, time: -1, reason: -1, rehab: -1, notes: -1 };
+                rows[0].forEach((h, idx) => {
+                    const t = h.replace(/\s+/g, '');
+                    if (t.includes('病院')) colMap.hospital = idx;
+                    else if (t.includes('診療科') || t.includes('科')) colMap.dept = idx;
+                    else if (t.includes('通院日') || (t === '日付')) colMap.date = idx;
+                    else if (t.includes('時間') || t.includes('時刻')) colMap.time = idx;
+                    else if (t.includes('理由') || t.includes('診察')) colMap.reason = idx;
+                    else if (t.includes('リハビリ')) colMap.rehab = idx;
+                    else if (t.includes('メモ') || t.includes('備考')) colMap.notes = idx;
+                });
+            }
+
+            let addedCount = 0;
+            let skippedCount = 0;
+            let latestDate = '';
+
+            for (let i = startIdx; i < rows.length; i++) {
+                const r = rows[i];
+                if (!r || r.length === 0) continue;
+
+                let hName = '', dept = '', rawDate = '', rawTime = '', reason = '', rehab = '', notes = '';
+
+                if (colMap && (colMap.hospital !== -1 || colMap.date !== -1)) {
+                    hName = colMap.hospital >= 0 ? (r[colMap.hospital] || '') : '';
+                    dept = colMap.dept >= 0 ? (r[colMap.dept] || '') : '';
+                    rawDate = colMap.date >= 0 ? (r[colMap.date] || '') : '';
+                    rawTime = colMap.time >= 0 ? (r[colMap.time] || '') : '';
+                    reason = colMap.reason >= 0 ? (r[colMap.reason] || '') : '';
+                    rehab = colMap.rehab >= 0 ? (r[colMap.rehab] || '') : '';
+                    notes = colMap.notes >= 0 ? (r[colMap.notes] || '') : '';
+                } else {
+                    const isFirstColDateOnly = /^\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}$/.test(r[0] || '');
+                    if (isFirstColDateOnly && r.length <= 7) {
+                        rawDate = r[0] || '';
+                        rawTime = r[1] || '';
+                        hName = r[2] || '';
+                        dept = r[3] || '';
+                        reason = r[4] || '';
+                        rehab = r[5] || '';
+                        notes = r[6] || '';
+                    } else {
+                        hName = r[1] || '';
+                        dept = r[2] || '';
+                        rawDate = r[3] || '';
+                        rawTime = r[4] || '';
+                        reason = r[5] || '';
+                        rehab = r[6] || '';
+                        notes = r[7] || '';
+                    }
+                }
+
+                const date = normalizeDateStr(rawDate);
+                const time = normalizeTimeStr(rawTime);
+                hName = hName.trim();
+                dept = dept.trim();
+                reason = reason.trim();
+                rehab = rehab.trim();
+                notes = notes.trim();
+
+                if (!date && !hName && !reason && !rehab) continue;
+
+                let hospitalId = '';
+                if (hName) {
+                    let existingH = appData.hospitals.find(h => h.name === hName);
+                    if (!existingH) {
+                        existingH = { id: generateId('h'), name: hName, dept };
+                        appData.hospitals.push(existingH);
+                    }
+                    hospitalId = existingH.id;
+                }
+
+                const isDup = appData.visits.some(v =>
+                    v.date === date &&
+                    v.time === time &&
+                    (v.hospitalName === hName || v.hospitalId === hospitalId) &&
+                    v.reason === reason &&
+                    v.rehab === rehab
+                );
+
+                if (isDup) {
+                    skippedCount++;
+                    continue;
+                }
+
+                appData.visits.push({
+                    id: generateId('v'),
+                    hospitalId,
+                    hospitalName: hName,
+                    date,
+                    time,
+                    reason,
+                    rehab,
+                    notes
+                });
+                addedCount++;
+                if (date && date > latestDate) latestDate = date;
+            }
+
+            if (addedCount > 0 && latestDate) {
+                const parts = latestDate.split('-');
+                if (parts.length === 3) {
+                    currentYear = parseInt(parts[0], 10);
+                    currentMonth = parseInt(parts[1], 10) - 1;
+                }
+            }
+
+            await saveAppData();
+            updateHospitalSelects();
+            renderCurrentView();
+
+            if (addedCount > 0) {
+                showToast(`${addedCount}件の履歴をインポートしました`, true);
+                showAlertModal(
+                    'インポート完了',
+                    `スプレッドシートの履歴を取り込みました！\n\n新規追加：${addedCount}件` + (skippedCount > 0 ? `\n重複スキップ：${skippedCount}件` : ''),
+                    true
+                );
+            } else if (skippedCount > 0) {
+                showToast('すべて登録済みの履歴でした', true);
+                showAlertModal('インポート完了', `読み込んだデータ（${skippedCount}件）はすでにすべて登録済みでした。`, true);
+            } else {
+                showToast('取り込める履歴が見つかりませんでした', false);
+                showAlertModal('取り込めませんでした', '日付や病院名が含まれる有効な行が見つかりませんでした。\nデータの形式をご確認ください。', false);
+            }
+        }
+
+        function handleCsvFileImport(event) {
+            const file = event.target.files && event.target.files[0];
+            event.target.value = '';
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const text = e.target.result || '';
+                    const delimiter = text.includes('\t') && !text.includes(',') ? '\t' : ',';
+                    const rows = parseDelimitedText(text, delimiter);
+                    await importRecordsFromRows(rows);
+                } catch (err) {
+                    showToast('CSVの読み込みに失敗しました', false);
+                    showAlertModal('インポートできませんでした', getErrorReason(err), false);
+                }
+            };
+            reader.onerror = () => {
+                showToast('ファイルを読み込めませんでした', false);
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        async function handlePasteImport() {
+            const area = document.getElementById('paste-import-area');
+            const text = (area.value || '').trim();
+            if (!text) {
+                showToast('スプレッドシートからコピーした内容を貼り付けてください', false);
+                return;
+            }
+            try {
+                const delimiter = text.includes('\t') ? '\t' : ',';
+                const rows = parseDelimitedText(text, delimiter);
+                await importRecordsFromRows(rows);
+                area.value = '';
+            } catch (err) {
+                showToast('インポートに失敗しました', false);
+                showAlertModal('インポートできませんでした', getErrorReason(err), false);
+            }
         }
 
         function exportCSV() {
