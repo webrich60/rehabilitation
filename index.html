@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通院・リハビリ管理帳 v1.9.0</title>
+    <title>通院・リハビリ管理帳 v1.9.3</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -61,7 +61,7 @@
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">通院・リハビリ管理帳</h1>
-                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.9.0</span>
+                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.9.3</span>
                         </div>
                         <p class="text-xs font-bold text-slate-600 mt-0.5">文字くっきり・スマホ最適化版</p>
                     </div>
@@ -107,9 +107,14 @@
         </div>
 
         <!-- ストレージ制限警告バナー -->
-        <div id="storage-warning-banner" class="hidden bg-rose-50 border-2 border-rose-300 rounded-2xl p-3.5 text-xs font-bold text-rose-900 space-y-1.5">
-            <p class="font-black text-rose-950">⚠️ このブラウザでは端末への保存が制限されています</p>
-            <p>プライベート（シークレット）モードやLINE等のアプリ内ブラウザでは、閉じるとデータが消えます。「スプレッドシート連携」から<strong>専用ブックマークURLをコピー</strong>して、通常のChrome/Safariで開いてください。</p>
+        <div id="storage-warning-banner" class="hidden bg-rose-50 border-2 border-rose-400 rounded-2xl p-3.5 text-xs font-bold text-rose-950 space-y-2">
+            <p class="font-black text-sm text-rose-950">⚠️ この端末にデータを保存できない状態です（閉じると消えます）</p>
+            <div id="storage-warning-detail" class="space-y-1.5"></div>
+            <div class="flex flex-wrap gap-2 pt-1">
+                <button type="button" onclick="location.reload()" class="px-3 py-1.5 rounded-lg bg-rose-700 text-white font-black border-2 border-rose-800 active:scale-95">設定を変えたので再チェック</button>
+                <button type="button" onclick="openSyncModal()" class="px-3 py-1.5 rounded-lg bg-white text-rose-900 font-black border-2 border-rose-400 active:scale-95">スプレッドシート連携を開く</button>
+            </div>
+            <p id="storage-diag-text" class="text-[11px] text-rose-800 font-bold"></p>
         </div>
 
         <!-- コントロールパネル -->
@@ -366,6 +371,9 @@
                     <button type="button" onclick="sendAllVisitsToSheet()" class="w-full py-3 px-4 rounded-xl bg-teal-700 text-white font-black text-sm hover:bg-teal-800 active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
                         <span>📤</span><span>全件をスプレッドシートへ再送信（通常は自動なので不要）</span>
                     </button>
+                    <button type="button" onclick="restoreFromSnapshot()" class="w-full py-3 px-4 rounded-xl bg-amber-100 text-amber-950 border-2 border-amber-500 font-black text-sm active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
+                        <span>🛟</span><span>端末内の自動バックアップから復元</span>
+                    </button>
                     <button type="button" onclick="restoreFromSheet()" class="w-full py-3 px-4 rounded-xl bg-blue-600 text-white font-black text-sm hover:bg-blue-700 active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
                         <span>🔄</span><span>今すぐ同期（シートから取得＋未送信分を送信）</span>
                     </button>
@@ -463,6 +471,8 @@
         let savedGasUrl = '';
         let autoSyncEnabled = true;
         let storageRestricted = false;
+        let storageDiag = { ls: null, idb: null, cookie: null };
+        let restrictedWarnShown = false;
         let memoryFallback = {};
         let currentView = 'calendar';
         let currentYear = new Date().getFullYear();
@@ -576,6 +586,10 @@
                 localStorage.setItem(key, valueStr);
                 lsOk = (localStorage.getItem(key) === valueStr);
             } catch (e) {}
+            if (!lsOk) {
+                // 容量不足などで書けなかった場合、古いコピーが残ると次回それが読まれてしまうので消す
+                try { localStorage.removeItem(key); } catch (e) {}
+            }
             const idbOk = await idbSet(key, valueStr);
             if (!lsOk && !idbOk) {
                 storageRestricted = true;
@@ -590,6 +604,16 @@
                 lsVal = localStorage.getItem(key);
             } catch (e) {}
             const idbVal = await idbGet(key);
+            const stampOf = (v) => { try { return Number(JSON.parse(v).savedAt) || 0; } catch (e) { return 0; } };
+            if (typeof lsVal === 'string' && lsVal.length > 0 && typeof idbVal === 'string' && idbVal.length > 0 && lsVal !== idbVal) {
+                const ls = stampOf(lsVal), idb = stampOf(idbVal);
+                if (ls || idb) {
+                    const newer = (idb >= ls) ? idbVal : lsVal;
+                    if (newer === idbVal) { try { localStorage.setItem(key, idbVal); } catch (e) { try { localStorage.removeItem(key); } catch (x) {} } }
+                    else await idbSet(key, lsVal);
+                    return newer;
+                }
+            }
             if (typeof lsVal === 'string' && lsVal.length > 0 && (!idbVal || lsVal.length >= idbVal.length)) {
                 if (idbVal !== lsVal) await idbSet(key, lsVal);
                 return lsVal;
@@ -601,28 +625,161 @@
             return memoryFallback[key] || null;
         }
 
+        // ---- 端末内の自動バックアップ（最大15世代） ----
+        const SNAP_KEY = 'hospital_tracker_snapshots_v1';
+        async function takeSnapshot(reason) {
+            try {
+                if (!appData.visits.length && !appData.hospitals.length) return;
+                let list = [];
+                const raw = await idbGet(SNAP_KEY);
+                if (typeof raw === 'string') { try { list = JSON.parse(raw) || []; } catch (e) { list = []; } }
+                const body = JSON.stringify({ hospitals: appData.hospitals, visits: appData.visits, reasonPresets: appData.reasonPresets, rehabPresets: appData.rehabPresets });
+                if (list.length && list[0].body === body) return;
+                list.unshift({ at: Date.now(), reason, h: appData.hospitals.length, v: appData.visits.length, body });
+                list = list.slice(0, 15);
+                await idbSet(SNAP_KEY, JSON.stringify(list));
+            } catch (e) {}
+        }
+
+        async function restoreFromSnapshot() {
+            let list = [];
+            try { list = JSON.parse((await idbGet(SNAP_KEY)) || '[]') || []; } catch (e) {}
+            if (!list.length) { showAlertModal('バックアップがありません', 'この端末には自動バックアップがまだありません。', false); return; }
+            const best = list.slice().sort((a, b) => (b.v - a.v) || (b.at - a.at))[0];
+            const d = new Date(best.at);
+            const when = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+            showConfirm('自動バックアップから復元',
+                `記録がいちばん多いバックアップ（${when}時点：病院 ${best.h}件／履歴 ${best.v}件）を、今のデータに「追加」します。\n今のデータは消えません。`,
+                async () => {
+                    const b = JSON.parse(best.body);
+                    let addV = 0, addH = 0;
+                    (b.hospitals || []).forEach(h => { if (!appData.hospitals.some(x => x.id === h.id || (x.name === h.name && (x.dept || '') === (h.dept || '')))) { appData.hospitals.push(h); addH++; } });
+                    (b.visits || []).forEach(v => { if (!appData.visits.some(x => x.id === v.id)) { v.synced = false; appData.visits.push(v); addV++; } });
+                    markMetaDirty();
+                    await saveAppData();
+                    refreshAfterSync();
+                    showAlertModal('復元しました', `病院 ${addH}件・履歴 ${addV}件を戻しました。`, true);
+                });
+        }
+
         async function persistOnly() {
+            appData.savedAt = Date.now();
             const serialized = JSON.stringify(appData);
             await safeSetItem(STORAGE_KEYS.DATA, serialized);
         }
 
         async function saveAppData() {
             await persistOnly();
+            warnIfVolatile();
             updateDataStatusBar();
             scheduleSync();
+        }
+
+        // 端末保存がどこまで使えるかを個別にチェック
+        async function diagnoseStorage() {
+            try {
+                const testKey = '__ht_storage_test__';
+                localStorage.setItem(testKey, '1');
+                storageDiag.ls = (localStorage.getItem(testKey) === '1');
+                localStorage.removeItem(testKey);
+            } catch (e) {
+                storageDiag.ls = false;
+            }
+            storageDiag.idb = await idbSet('__ht_idb_test__', '1');
+            try {
+                document.cookie = '__ht_ck=1; max-age=60; path=/; SameSite=Lax';
+                storageDiag.cookie = document.cookie.includes('__ht_ck=1');
+            } catch (e) {
+                storageDiag.cookie = false;
+            }
+            if (!storageDiag.ls && !storageDiag.idb) storageRestricted = true;
+            try {
+                let total = 0; const keys = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i); const v = localStorage.getItem(k) || '';
+                    total += (k.length + v.length) * 2; keys.push([k, v.length * 2]);
+                }
+                keys.sort((a, b) => b[1] - a[1]);
+                storageDiag.lsBytes = total;
+                storageDiag.lsTop = keys.slice(0, 3);
+            } catch (e) {}
+            try {
+                if (navigator.storage && navigator.storage.estimate) {
+                    const est = await navigator.storage.estimate();
+                    storageDiag.usage = est.usage; storageDiag.quota = est.quota;
+                }
+            } catch (e) {}
+        }
+
+        function fmtBytes(n) {
+            if (!n && n !== 0) return '?';
+            if (n >= 1048576) return (n / 1048576).toFixed(1) + 'MB';
+            return Math.round(n / 1024) + 'KB';
+        }
+
+        function detectInAppBrowser() {
+            const ua = navigator.userAgent || '';
+            if (/Line\//i.test(ua)) return 'LINE';
+            if (/FBAN|FBAV/i.test(ua)) return 'Facebook';
+            if (/Instagram/i.test(ua)) return 'Instagram';
+            if (/; wv\)/.test(ua)) return 'アプリ内ブラウザ';
+            return '';
+        }
+
+        function renderStorageWarning() {
+            const detail = document.getElementById('storage-warning-detail');
+            const diag = document.getElementById('storage-diag-text');
+            if (!detail) return;
+            const inApp = detectInAppBrowser();
+            const ua = navigator.userAgent || '';
+            const isIOS = /iPhone|iPad|iPod/i.test(ua);
+            let html = '';
+            if (inApp) {
+                html = `<p>いま <strong>${escapeHtml(inApp)}</strong> の中のブラウザで開いています。右上（または下）のメニューから<strong>「ブラウザで開く」</strong>を選び、Chrome／Safariで開き直してください。</p>`;
+            } else if (isIOS) {
+                html = `<p>Safariの<strong>プライベートモード</strong>か、<strong>「すべてのCookieをブロック」</strong>がONになっている可能性があります。</p>
+                <p>iPhoneの「設定」→「アプリ」→「Safari」→<strong>「すべてのCookieをブロック」をOFF</strong>にして、通常タブで開き直してください。</p>`;
+            } else {
+                html = `<p>通常のChromeでこの表示が出る場合は、<strong>Chromeの設定でこのサイトのデータ保存（Cookie）がブロック</strong>されています。次のどちらかで「許可」にしてください。</p>
+                <p>① アドレスバー左のアイコン（≡のようなマーク）をタップ →「Cookie とサイトデータ」または「権限」→ <strong>許可</strong></p>
+                <p>② Chromeの ⋮ →「設定」→「サイトの設定」→「すべてのサイト」→ <strong>webrich60.github.io</strong> → Cookie／データの保存を <strong>許可</strong>（全体設定の「Cookie」や「オンデバイスのサイトデータ」が「ブロック」なら「許可」に）</p>
+                <p>シークレットタブ（画面が黒っぽいタブ）で開いている場合は、通常のタブで開き直してください。</p>`;
+            }
+            if (!isGasReady()) {
+                html += `<p class="text-rose-800">※ スプレッドシート連携も未設定のため、<strong>今入力した内容は閉じると消えます</strong>。</p>`;
+            } else {
+                html += `<p class="text-emerald-900">✓ スプレッドシート連携は有効です。入力した記録はシートに送られ、次回開いたときにシートから復元されます（このURLのままブックマークしてください）。</p>`;
+            }
+            detail.innerHTML = html;
+            if (diag) {
+                const mark = (b) => b ? '○' : '×';
+                let t = `診断：localStorage ${mark(storageDiag.ls)} ／ IndexedDB ${mark(storageDiag.idb)} ／ Cookie ${mark(storageDiag.cookie)}`;
+                t += `\nlocalStorage使用量：${fmtBytes(storageDiag.lsBytes)}（上限 約5〜10MB・webrich60.github.io の全アプリ共通）`;
+                if (storageDiag.usage !== undefined) t += `\nサイト全体の使用量：${fmtBytes(storageDiag.usage)} ／ 上限 ${fmtBytes(storageDiag.quota)}`;
+                if (storageDiag.lsTop && storageDiag.lsTop.length) t += `\n大きい保存データ：` + storageDiag.lsTop.map(x => `${x[0]}（${fmtBytes(x[1])}）`).join('、');
+                diag.textContent = t;
+                diag.style.whiteSpace = 'pre-line';
+            }
+        }
+
+        // 保存できない状態で入力したときに一度だけ強く警告
+        function warnIfVolatile() {
+            if (!storageRestricted || restrictedWarnShown) return;
+            restrictedWarnShown = true;
+            showAlertModal(
+                '⚠️ この端末には保存されていません',
+                isGasReady()
+                    ? 'ブラウザの設定で端末への保存がブロックされています。\n記録はスプレッドシートには送られますが、画面上部の赤い案内に沿ってブラウザの設定を「許可」にしてください。'
+                    : 'ブラウザの設定で端末への保存がブロックされており、スプレッドシート連携も未設定です。\nこのままでは画面を閉じると入力内容が消えます。\n画面上部の赤い案内に沿ってブラウザの設定を「許可」にしてください。',
+                false
+            );
         }
 
         async function loadAllData() {
             if (navigator.storage && navigator.storage.persist) {
                 try { await navigator.storage.persist(); } catch (e) {}
             }
-            try {
-                const testKey = '__ht_storage_test__';
-                localStorage.setItem(testKey, '1');
-                localStorage.removeItem(testKey);
-            } catch (e) {
-                storageRestricted = true;
-            }
+            await diagnoseStorage();
             try {
                 const rawData = await safeGetItem(STORAGE_KEYS.DATA);
                 if (rawData) {
@@ -639,6 +796,7 @@
             } catch (err) {
                 console.error('データ読み込みエラー:', err);
             }
+            await takeSnapshot('起動時');
             try {
                 const urlFromLocation = getGasUrlFromLocation();
                 const rawUrl = await safeGetItem(STORAGE_KEYS.GAS_URL);
@@ -829,7 +987,7 @@
             updateSyncBadge();
             const warnBanner = document.getElementById('storage-warning-banner');
             if (warnBanner) {
-                if (storageRestricted) warnBanner.classList.remove('hidden');
+                if (storageRestricted) { warnBanner.classList.remove('hidden'); renderStorageWarning(); }
                 else warnBanner.classList.add('hidden');
             }
             const jumpBtn = document.getElementById('jump-latest-btn');
@@ -1674,12 +1832,29 @@
             // 設定（病院リスト・よく使う項目）
             const sm = json.meta;
             if (sm && Array.isArray(sm.hospitals)) {
-                if (!appData.metaDirty && (Number(sm.updatedAt) || 0) > (appData.metaUpdatedAt || 0)) {
-                    appData.hospitals = sm.hospitals;
-                    if (Array.isArray(sm.reasonPresets)) appData.reasonPresets = sm.reasonPresets;
-                    if (Array.isArray(sm.rehabPresets)) appData.rehabPresets = sm.rehabPresets;
-                    appData.metaUpdatedAt = Number(sm.updatedAt) || 0;
+                // 【v1.9.3】シート側の設定で端末の病院リストを「置き換え」ない。足りない分だけ追加する
+                if (appData.metaDirty) {
+                    // 端末側に未送信の設定変更（病院の削除など）がある → 端末側を優先し、この後シートへ送る
+                } else if (appData.hospitals.length === 0) {
+                    appData.hospitals = sm.hospitals.filter(h => h && h.name);
                     metaAdopted = true;
+                } else {
+                    let addedH = 0;
+                    sm.hospitals.forEach(sh => {
+                        if (!sh || !sh.name) return;
+                        const exists = appData.hospitals.some(h => h.id === sh.id
+                            || (normText(h.name) === normText(sh.name) && normText(h.dept) === normText(sh.dept)));
+                        if (!exists) { appData.hospitals.push(sh); addedH++; }
+                    });
+                    if (addedH) metaAdopted = true;
+                }
+                if (!appData.metaDirty) {
+                    ['reasonPresets', 'rehabPresets'].forEach(k => {
+                        (Array.isArray(sm[k]) ? sm[k] : []).forEach(p => {
+                            if (p && !appData[k].includes(p)) { appData[k].push(p); metaAdopted = true; }
+                        });
+                    });
+                    if (metaAdopted) markMetaDirty();
                 }
             } else if (!appData.metaDirty) {
                 // シート側に設定がまだ無い → 端末の設定をアップロードする
@@ -1746,9 +1921,11 @@
             if (serverVisits.length === 0) {
                 appData.visits.forEach(v => { if (v.synced === true) v.synced = false; });
             } else {
-                const before = appData.visits.length;
-                appData.visits = appData.visits.filter(v => !(v.synced === true && !serverIds.has(v.id)));
-                removed = before - appData.visits.length;
+                // 【v1.9.3】シートに無い記録を端末から自動削除しない（消失防止）。
+                // シートに無い記録は「未送信」に戻して送り直す。
+                appData.visits.forEach(v => {
+                    if (v.synced === true && !serverIds.has(v.id)) { v.synced = false; }
+                });
             }
 
             // 病院の紐づけ
@@ -1780,6 +1957,7 @@
                 if (!json.version || json.version < 2) {
                     throw new Error('GAS側のコードが古いままです。新しいgas_code.js（v2）を貼り付けて「新バージョン」で再デプロイしてください。');
                 }
+                await takeSnapshot('同期前');
                 const result = mergeFromServer(json);
                 appData.initialPullDone = true;
                 await persistOnly();
