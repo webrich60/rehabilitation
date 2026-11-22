@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通院・リハビリ管理帳 v1.8.1</title>
+    <title>通院・リハビリ管理帳 v1.9.0</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -61,7 +61,7 @@
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">通院・リハビリ管理帳</h1>
-                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.8.1</span>
+                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.9.0</span>
                         </div>
                         <p class="text-xs font-bold text-slate-600 mt-0.5">文字くっきり・スマホ最適化版</p>
                     </div>
@@ -97,9 +97,9 @@
                     <span>💾</span>
                     <span id="status-counts-text">保存中：病院 0件 / 履歴 0件</span>
                 </span>
-                <span id="status-gas-badge" class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800">
-                    <span>☁️</span><span>スプレッドシート自動同期ON</span>
-                </span>
+                <button type="button" id="status-gas-badge" onclick="onSyncBadgeClick()" class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border bg-amber-50 border-amber-300 text-amber-900">
+                    <span>☁️</span><span id="status-gas-text">同期の状態</span>
+                </button>
             </div>
             <button type="button" id="jump-latest-btn" onclick="jumpToLatestVisitMonth()" class="hidden px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:scale-95 transition">
                 最新の記録月へ移動 →
@@ -353,9 +353,9 @@
                     <input type="url" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-bold text-xs sm:text-sm text-slate-900 focus:border-emerald-600 focus:outline-none">
                     <label class="flex items-center gap-2 text-xs font-black text-slate-800 cursor-pointer select-none pt-1">
                         <input type="checkbox" id="auto-sync-checkbox" onchange="handleToggleAutoSync()" class="w-4 h-4 accent-emerald-700 rounded">
-                        <span>サイトを開いたときにスプレッドシートから自動で履歴を読み込む（消去防止）</span>
+                        <span>自動同期する（起動時の読み込み／保存・修正・削除のたびの送信／閉じる時の送信）</span>
                     </label>
-                    <p class="text-xs font-bold text-slate-600">※URLは端末ストレージ・Cookie・アドレスバーの4重で保護されます。既存の病院や通院履歴が消えることはありません。</p>
+                    <p class="text-xs font-bold text-slate-600">※保存のたびにスプレッドシートへ自動送信されます。スマホ側のデータが消えても、起動時にシートから全件復元されます。<br>※GAS側のコードも新しい版（v2）へ更新・再デプロイが必要です。</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <button type="button" onclick="handleSaveGasUrl()" class="w-full py-2.5 rounded-xl bg-emerald-700 text-white font-black text-sm hover:bg-emerald-800 active:scale-95 transition">連携URLを保存する</button>
                         <button type="button" onclick="copyBookmarkUrl()" class="w-full py-2.5 rounded-xl bg-white border-2 border-emerald-500 text-emerald-900 font-black text-xs sm:text-sm hover:bg-emerald-50 active:scale-95 transition">🔗 消えない専用URLをコピー</button>
@@ -364,13 +364,21 @@
 
                 <div class="grid grid-cols-1 gap-2.5">
                     <button type="button" onclick="sendAllVisitsToSheet()" class="w-full py-3 px-4 rounded-xl bg-teal-700 text-white font-black text-sm hover:bg-teal-800 active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
-                        <span>📤</span><span>現在の通院記録をスプレッドシートへ一括送信</span>
+                        <span>📤</span><span>全件をスプレッドシートへ再送信（通常は自動なので不要）</span>
                     </button>
                     <button type="button" onclick="restoreFromSheet()" class="w-full py-3 px-4 rounded-xl bg-blue-600 text-white font-black text-sm hover:bg-blue-700 active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
-                        <span>📥</span><span>スプレッドシートから自動インポート（GAS連携）</span>
+                        <span>🔄</span><span>今すぐ同期（シートから取得＋未送信分を送信）</span>
                     </button>
                     <button type="button" onclick="exportCSV()" class="w-full py-3 px-4 rounded-xl bg-white border-2 border-slate-300 text-slate-800 font-black text-sm hover:bg-slate-100 active:scale-95 transition flex items-center justify-center gap-2">
                         <span>📄</span><span>CSVファイルとしてダウンロード</span>
+                    </button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="exportJsonBackup()" class="py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 text-slate-800 font-black text-xs hover:bg-slate-100 active:scale-95 transition">💾 バックアップ保存(JSON)</button>
+                        <button type="button" onclick="document.getElementById('json-import-input').click()" class="py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 text-slate-800 font-black text-xs hover:bg-slate-100 active:scale-95 transition">📦 バックアップ読込(JSON)</button>
+                    </div>
+                    <input type="file" id="json-import-input" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
+                    <button type="button" onclick="copyDefaultUrlLine()" class="w-full py-2.5 px-4 rounded-xl bg-white border-2 border-emerald-500 text-emerald-900 font-black text-xs hover:bg-emerald-50 active:scale-95 transition">
+                        📌 URLをHTMLに埋め込む用の1行をコピー（最強の消えない対策）
                     </button>
                 </div>
 
@@ -392,7 +400,7 @@
                 </div>
 
                 <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-emerald-900 space-y-1">
-                    <p>💡 <strong>データ保護（二重保存）:</strong> 端末内の「IndexedDB」と「localStorage」の両方に自動保存されます。</p>
+                    <p>💡 <strong>データ保護:</strong> ①端末内（IndexedDB＋localStorage）②スプレッドシート自動同期 の二重保存です。通信できない時の記録は端末内に残り、つながった時に自動送信されます。</p>
                     <p>※プライベート（シークレット）モードやLINE内ブラウザでは端末側データが消去される場合があるため、通常のChrome/Safariでのご利用をおすすめします。</p>
                 </div>
             </div>
@@ -434,6 +442,10 @@
             AUTO_SYNC: 'hospital_tracker_auto_sync_v1'
         };
 
+        // 【消えない対策】GASのウェブアプリURLをここに書いておくと、ブラウザのデータが消えても必ず連携されます。
+        // 例: const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/xxxxxxxx/exec';
+        const DEFAULT_GAS_URL = '';
+
         const DEFAULT_REASON_PRESETS = ['定期検診', '経過観察', '処方箋の受取', '痛み・症状の相談', '検査結果の確認'];
         const DEFAULT_REHAB_PRESETS = ['ストレッチ・可動域訓練', '筋力トレーニング', '電気・温熱治療', '歩行・バランス訓練', 'マッサージ・手技'];
 
@@ -441,7 +453,11 @@
             hospitals: [],
             visits: [],
             reasonPresets: [...DEFAULT_REASON_PRESETS],
-            rehabPresets: [...DEFAULT_REHAB_PRESETS]
+            rehabPresets: [...DEFAULT_REHAB_PRESETS],
+            pendingDeletes: [],
+            metaDirty: false,
+            metaUpdatedAt: 0,
+            initialPullDone: false
         };
 
         let savedGasUrl = '';
@@ -585,10 +601,15 @@
             return memoryFallback[key] || null;
         }
 
-        async function saveAppData() {
+        async function persistOnly() {
             const serialized = JSON.stringify(appData);
             await safeSetItem(STORAGE_KEYS.DATA, serialized);
+        }
+
+        async function saveAppData() {
+            await persistOnly();
             updateDataStatusBar();
+            scheduleSync();
         }
 
         async function loadAllData() {
@@ -610,6 +631,10 @@
                     appData.visits = Array.isArray(parsed.visits) ? parsed.visits : [];
                     appData.reasonPresets = Array.isArray(parsed.reasonPresets) ? parsed.reasonPresets : [...DEFAULT_REASON_PRESETS];
                     appData.rehabPresets = Array.isArray(parsed.rehabPresets) ? parsed.rehabPresets : [...DEFAULT_REHAB_PRESETS];
+                    appData.pendingDeletes = Array.isArray(parsed.pendingDeletes) ? parsed.pendingDeletes : [];
+                    appData.metaDirty = !!parsed.metaDirty;
+                    appData.metaUpdatedAt = Number(parsed.metaUpdatedAt) || 0;
+                    appData.initialPullDone = !!parsed.initialPullDone;
                 }
             } catch (err) {
                 console.error('データ読み込みエラー:', err);
@@ -618,7 +643,7 @@
                 const urlFromLocation = getGasUrlFromLocation();
                 const rawUrl = await safeGetItem(STORAGE_KEYS.GAS_URL);
                 const cookieUrl = getCookie(STORAGE_KEYS.GAS_URL);
-                savedGasUrl = (urlFromLocation || rawUrl || cookieUrl || '').trim();
+                savedGasUrl = (urlFromLocation || rawUrl || cookieUrl || DEFAULT_GAS_URL || '').trim();
                 if (savedGasUrl) {
                     await safeSetItem(STORAGE_KEYS.GAS_URL, savedGasUrl);
                     setCookie(STORAGE_KEYS.GAS_URL, savedGasUrl, 365);
@@ -801,11 +826,7 @@
             if (countEl) {
                 countEl.innerText = `保存中：病院 ${appData.hospitals.length}件 / 履歴 ${appData.visits.length}件`;
             }
-            const gasBadge = document.getElementById('status-gas-badge');
-            if (gasBadge) {
-                if (savedGasUrl && autoSyncEnabled) gasBadge.classList.remove('hidden');
-                else gasBadge.classList.add('hidden');
-            }
+            updateSyncBadge();
             const warnBanner = document.getElementById('storage-warning-banner');
             if (warnBanner) {
                 if (storageRestricted) warnBanner.classList.remove('hidden');
@@ -1078,7 +1099,9 @@
                     time,
                     reason,
                     rehab,
-                    notes
+                    notes,
+                    updatedAt: Date.now(),
+                    synced: false
                 };
 
                 if (id) {
@@ -1146,6 +1169,7 @@
                 async () => {
                     try {
                         appData.visits = appData.visits.filter(item => item.id !== id);
+                        addPendingDelete(id);
                         await saveAppData();
                         closeModal('detail-modal');
                         renderCurrentView();
@@ -1201,6 +1225,13 @@
                     if (target) {
                         target.name = name;
                         target.dept = dept;
+                        appData.visits.forEach(v => {
+                            if (v.hospitalId === editId) {
+                                v.hospitalName = name;
+                                v.updatedAt = Date.now();
+                                v.synced = false;
+                            }
+                        });
                     }
                 } else {
                     appData.hospitals.push({
@@ -1209,6 +1240,7 @@
                         dept
                     });
                 }
+                markMetaDirty();
 
                 await saveAppData();
                 resetHospitalForm();
@@ -1230,6 +1262,7 @@
                 async () => {
                     try {
                         appData.hospitals = appData.hospitals.filter(item => item.id !== id);
+                        markMetaDirty();
                         await saveAppData();
                         resetHospitalForm();
                         renderHospitalList();
@@ -1266,13 +1299,15 @@
         function confirmResetAllData() {
             showConfirm(
                 '全データの初期化',
-                '登録されている病院と通院履歴をすべて削除して初期状態に戻します。\n本当によろしいですか？\n（※GAS連携URLは保持されます）',
+                '登録されている病院と通院履歴をすべて削除して初期状態に戻します。\n※スプレッドシート連携中は、シート上の記録も削除されます。\n本当によろしいですか？\n（※GAS連携URLは保持されます）',
                 async () => {
                     try {
+                        appData.visits.forEach(v => addPendingDelete(v.id));
                         appData.hospitals = [];
                         appData.visits = [];
                         appData.reasonPresets = [...DEFAULT_REASON_PRESETS];
                         appData.rehabPresets = [...DEFAULT_REHAB_PRESETS];
+                        markMetaDirty();
                         await saveAppData();
                         renderHospitalList();
                         updateHospitalSelects();
@@ -1348,6 +1383,7 @@
                         list.push(val);
                     }
                 }
+                markMetaDirty();
 
                 await saveAppData();
                 resetPresetForm();
@@ -1371,6 +1407,7 @@
                 async () => {
                     try {
                         list.splice(index, 1);
+                        markMetaDirty();
                         await saveAppData();
                         resetPresetForm();
                         renderPresetList();
@@ -1456,151 +1493,436 @@
                 syncGasUrlToAddressBar(savedGasUrl);
                 updateDataStatusBar();
                 showToast('連携URLを保存しました', true);
-                showAlertModal('保存しました', url ? 'スプレッドシート連携URLを保存しました。\nアドレスバーにも自動反映されたので、このままブックマークしておくと安心です。' : '連携URLをクリアしました。', true);
+                showAlertModal('保存しました', url ? 'スプレッドシート連携URLを保存しました。\nこれ以降、保存・修正・削除のたびに自動でシートへ送信されます。\n（いま、シートとの同期を開始します）' : '連携URLをクリアしました。', true);
+                if (url && isGasReady()) syncNow(false);
             } catch (err) {
                 showToast('連携URLを保存できませんでした: ' + getErrorReason(err), false);
                 showAlertModal('保存できませんでした', getErrorReason(err), false);
             }
         }
 
-        async function sendAllVisitsToSheet() {
-            if (!savedGasUrl) {
-                showAlertModal('URLが未設定です', '先にGoogle Apps ScriptのウェブアプリURLを入力して保存してください。', false);
-                return;
-            }
-            if (appData.visits.length === 0) {
-                showToast('送信する通院記録がありません', false);
-                return;
-            }
-            showConfirm(
-                'スプレッドシートへ一括送信',
-                `現在登録されている ${appData.visits.length}件 の通院記録をスプレッドシートへ送信しますか？`,
-                async () => {
-                    try {
-                        showToast('スプレッドシートへ送信中...', true);
-                        let sentCount = 0;
-                        for (const v of appData.visits) {
-                            const h = getHospitalById(v.hospitalId);
-                            const payload = {
-                                hospitalName: h ? h.name : (v.hospitalName || ''),
-                                department: h ? (h.dept || '') : '',
-                                date: v.date || '',
-                                time: v.time || '',
-                                reason: v.reason || '',
-                                rehab: v.rehab || '',
-                                notes: v.notes || ''
-                            };
-                            await fetch(savedGasUrl, {
-                                method: 'POST',
-                                mode: 'no-cors',
-                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                                body: JSON.stringify(payload)
-                            });
-                            sentCount++;
-                        }
-                        showToast(`${sentCount}件をスプレッドシートへ保存しました`, true);
-                        showAlertModal('保存しました', `${sentCount}件の通院記録をスプレッドシートへ送信しました。`, true);
-                    } catch (err) {
-                        showToast('送信できませんでした: ' + getErrorReason(err), false);
-                        showAlertModal('送信できませんでした', getErrorReason(err), false);
-                    }
-                }
-            );
+        // =====================================================================
+        // スプレッドシート同期エンジン（v2）
+        //  ・端末内データ（IndexedDB/localStorage）＝高速キャッシュ
+        //  ・スプレッドシート＝本体（正）。保存・修正・削除のたびに自動送信
+        //  ・送信できなかった分は端末内に「未送信」として残り、再接続時に自動再送
+        //  ・起動時／画面に戻った時／オンライン復帰時に、シートから最新データを取得
+        // =====================================================================
+        let syncBusy = false;
+        let flushing = false;
+        let pulling = false;
+        let syncError = '';
+        let lastSyncAt = 0;
+        let syncTimer = null;
+        let syncListenersRegistered = false;
+        const FLUSH_BATCH = 80;
+        const FLUSH_BATCH_KEEPALIVE = 25;
+
+        function isGasReady() {
+            return !!(savedGasUrl && savedGasUrl.includes('/exec'));
         }
 
-        async function executeRestoreFromSheet(isAuto = false) {
+        function isDirty(v) {
+            return v.synced !== true;
+        }
+
+        function getPendingCount() {
+            let n = appData.visits.filter(isDirty).length + (appData.pendingDeletes || []).length;
+            if (appData.metaDirty) n++;
+            return n;
+        }
+
+        function markMetaDirty() {
+            appData.metaDirty = true;
+            appData.metaUpdatedAt = Date.now();
+        }
+
+        function addPendingDelete(id) {
+            if (!Array.isArray(appData.pendingDeletes)) appData.pendingDeletes = [];
+            if (!appData.pendingDeletes.includes(id)) appData.pendingDeletes.push(id);
+        }
+
+        function visitToPayload(v) {
+            const h = getHospitalById(v.hospitalId);
+            if (!v.updatedAt) v.updatedAt = Date.now();
+            return {
+                id: v.id,
+                hospitalName: h ? h.name : (v.hospitalName || ''),
+                department: h ? (h.dept || '') : (v.department || ''),
+                date: v.date || '',
+                time: v.time || '',
+                reason: v.reason || '',
+                rehab: v.rehab || '',
+                notes: v.notes || '',
+                updatedAt: v.updatedAt
+            };
+        }
+
+        function metaSnapshot() {
+            return {
+                hospitals: appData.hospitals,
+                reasonPresets: appData.reasonPresets,
+                rehabPresets: appData.rehabPresets,
+                updatedAt: appData.metaUpdatedAt || Date.now()
+            };
+        }
+
+        function diagnoseGasText(text) {
+            if (text.includes('ServiceLogin') || text.includes('accounts.google.com')) {
+                return 'GASのアクセス権限が「全員」になっていません。デプロイ設定をご確認ください。';
+            }
+            return 'GASから正しい応答がありません。URL（末尾 /exec）と、新バージョンでの再デプロイをご確認ください。';
+        }
+
+        async function postToGas(body, keepalive = false) {
+            const res = await fetch(savedGasUrl, {
+                method: 'POST',
+                redirect: 'follow',
+                keepalive: !!keepalive,
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) throw new Error(`HTTPエラー (${res.status})`);
+            const text = await res.text();
+            let json;
+            try { json = JSON.parse(text); } catch (e) { throw new Error(diagnoseGasText(text)); }
+            if (json.status !== 'success') throw new Error(json.message || 'GAS側でエラーが発生しました');
+            if (!json.version || json.version < 2) {
+                throw new Error('GAS側のコードが古いままです。新しいgas_code.js（v2）を貼り付けて「新バージョン」で再デプロイしてください。');
+            }
+            return json;
+        }
+
+        // ---- 端末 → シート ----
+        async function flushToSheet(opts = {}) {
+            if (!isGasReady() || flushing) return false;
+            flushing = true;
+            updateSyncBadge();
             try {
-                if (!isAuto) showToast('スプレッドシートからデータを取得中...', true);
-                const res = await fetch(savedGasUrl, {
-                    method: 'GET',
-                    redirect: 'follow',
-                    cache: 'no-store'
-                });
-                if (!res.ok) throw new Error(`HTTPエラー (${res.status})`);
+                for (let guard = 0; guard < 60; guard++) {
+                    const dirty = appData.visits.filter(isDirty);
+                    const dels = (appData.pendingDeletes || []).slice(0, 200);
+                    const needMeta = !!appData.metaDirty;
+                    if (!dirty.length && !dels.length && !needMeta) break;
 
-                const rawText = await res.text();
-                let json;
-                try {
-                    json = JSON.parse(rawText);
-                } catch (parseErr) {
-                    if (rawText.includes('doGet')) {
-                        throw new Error('GAS側に復元用コード（doGet）が反映されていません。GASを「新バージョン」で再デプロイしてください。');
-                    }
-                    if (rawText.includes('ServiceLogin') || rawText.includes('accounts.google.com')) {
-                        throw new Error('GASのアクセス権限が「全員」になっていないため取得できませんでした。');
-                    }
-                    throw new Error('GASから正しいデータが返されませんでした。URLとデプロイ設定（新バージョン・全員）をご確認ください。');
+                    const batch = dirty.slice(0, opts.keepalive ? FLUSH_BATCH_KEEPALIVE : FLUSH_BATCH);
+                    const sent = batch.map(v => {
+                        const payload = visitToPayload(v);
+                        return { id: v.id, stamp: v.updatedAt, payload };
+                    });
+                    const sentMeta = needMeta ? metaSnapshot() : null;
+                    const body = { action: 'sync', visits: sent.map(x => x.payload), deleteIds: dels, meta: sentMeta };
+
+                    await postToGas(body, opts.keepalive);
+
+                    sent.forEach(x => {
+                        const cur = appData.visits.find(v => v.id === x.id);
+                        if (cur && cur.updatedAt === x.stamp) cur.synced = true;
+                    });
+                    const delSet = new Set(dels);
+                    appData.pendingDeletes = (appData.pendingDeletes || []).filter(id => !delSet.has(id));
+                    if (sentMeta && appData.metaUpdatedAt === sentMeta.updatedAt) appData.metaDirty = false;
+                    await persistOnly();
+                    if (opts.keepalive) break;
                 }
-
-                if (json.status !== 'success') {
-                    throw new Error(json.message || 'GAS側でエラーが発生しました');
-                }
-
-                const sheetHospitals = Array.isArray(json.hospitals) ? json.hospitals : [];
-                const sheetVisits = Array.isArray(json.visits) ? json.visits : [];
-
-                sheetHospitals.forEach(sh => {
-                    if (sh.name && !appData.hospitals.some(h => h.id === sh.id || h.name === sh.name)) {
-                        appData.hospitals.push(sh);
-                    }
-                });
-
-                let addedCount = 0;
-                let latestDate = '';
-                sheetVisits.forEach(sv => {
-                    const normDate = normalizeDateStr(sv.date);
-                    const normTime = normalizeTimeStr(sv.time);
-                    const matchedH = appData.hospitals.find(h => h.id === sv.hospitalId || ('h_' + h.name) === sv.hospitalId);
-                    const hId = matchedH ? matchedH.id : sv.hospitalId;
-                    const hName = matchedH ? matchedH.name : (sv.hospitalName || '');
-
-                    const exists = appData.visits.some(v =>
-                        v.date === normDate && v.time === normTime && v.reason === (sv.reason || '') && v.rehab === (sv.rehab || '')
-                    );
-                    if (!exists && (normDate || hName || sv.reason || sv.rehab)) {
-                        appData.visits.push({
-                            id: generateId('v'),
-                            hospitalId: hId,
-                            hospitalName: hName,
-                            date: normDate,
-                            time: normTime,
-                            reason: sv.reason || '',
-                            rehab: sv.rehab || '',
-                            notes: sv.notes || ''
-                        });
-                        addedCount++;
-                        if (normDate && normDate > latestDate) latestDate = normDate;
-                    }
-                });
-
-                if (latestDate) {
-                    const parts = latestDate.split('-');
-                    if (parts.length === 3) {
-                        currentYear = parseInt(parts[0], 10);
-                        currentMonth = parseInt(parts[1], 10) - 1;
-                    }
-                }
-
-                await saveAppData();
-                updateHospitalSelects();
-                renderCurrentView();
-
-                if (isAuto) {
-                    if (addedCount > 0) {
-                        showToast(`スプレッドシートから${addedCount}件を自動復元しました`, true);
-                    }
-                } else {
-                    showToast(`スプレッドシートから${addedCount}件インポートしました`, true);
-                    showAlertModal('インポートしました', `スプレッドシートからデータを取得しました。\n新しく追加された記録：${addedCount}件`, true);
-                }
+                lastSyncAt = Date.now();
+                syncError = '';
+                return true;
             } catch (err) {
-                if (!isAuto) {
-                    showToast('インポートできませんでした', false);
-                    showAlertModal('インポートできませんでした', getErrorReason(err), false);
+                syncError = getErrorReason(err);
+                if (/Failed to fetch|NetworkError|Load failed/i.test(syncError)) {
+                    syncError = '通信できませんでした（電波・オフライン）。つながったら自動で再送します。';
+                }
+                return false;
+            } finally {
+                flushing = false;
+                updateDataStatusBar();
+            }
+        }
+
+        // ---- シート → 端末 ----
+        function normText(x) { return String(x || '').trim(); }
+
+        function localKey(v) {
+            const h = getHospitalById(v.hospitalId);
+            return [normText(h ? h.name : v.hospitalName), v.date || '', v.time || '', normText(v.reason), normText(v.rehab)].join('\u0001');
+        }
+
+        function serverKey(r) {
+            return [normText(r.hospitalName), r.date || '', r.time || '', normText(r.reason), normText(r.rehab)].join('\u0001');
+        }
+
+        function resolveHospitalFor(v) {
+            const name = normText(v.hospitalName);
+            if (!name) return;
+            const dept = normText(v.department);
+            let h = appData.hospitals.find(x => x.name === name && normText(x.dept) === dept)
+                 || appData.hospitals.find(x => x.name === name);
+            if (!h) {
+                h = { id: generateId('h'), name, dept };
+                appData.hospitals.push(h);
+                markMetaDirty();
+            }
+            v.hospitalId = h.id;
+            delete v.department;
+        }
+
+        function mergeFromServer(json) {
+            const serverVisits = Array.isArray(json.visits) ? json.visits : [];
+            let added = 0, updated = 0, removed = 0, metaAdopted = false;
+
+            // 設定（病院リスト・よく使う項目）
+            const sm = json.meta;
+            if (sm && Array.isArray(sm.hospitals)) {
+                if (!appData.metaDirty && (Number(sm.updatedAt) || 0) > (appData.metaUpdatedAt || 0)) {
+                    appData.hospitals = sm.hospitals;
+                    if (Array.isArray(sm.reasonPresets)) appData.reasonPresets = sm.reasonPresets;
+                    if (Array.isArray(sm.rehabPresets)) appData.rehabPresets = sm.rehabPresets;
+                    appData.metaUpdatedAt = Number(sm.updatedAt) || 0;
+                    metaAdopted = true;
+                }
+            } else if (!appData.metaDirty) {
+                // シート側に設定がまだ無い → 端末の設定をアップロードする
+                markMetaDirty();
+            }
+
+            const pendingDel = new Set(appData.pendingDeletes || []);
+            const serverIds = new Set();
+            const localById = new Map(appData.visits.map(v => [v.id, v]));
+            const unsyncedByKey = new Map();
+            appData.visits.filter(isDirty).forEach(v => unsyncedByKey.set(localKey(v), v));
+            const touched = [];
+
+            serverVisits.forEach(sv => {
+                if (!sv || !sv.id) return;
+                serverIds.add(sv.id);
+                if (pendingDel.has(sv.id)) return;
+
+                const rec = {
+                    id: sv.id,
+                    hospitalId: '',
+                    hospitalName: normText(sv.hospitalName),
+                    department: normText(sv.department),
+                    date: normalizeDateStr(sv.date),
+                    time: normalizeTimeStr(sv.time),
+                    reason: sv.reason || '',
+                    rehab: sv.rehab || '',
+                    notes: sv.notes || '',
+                    updatedAt: Number(sv.updatedAt) || 0,
+                    synced: true
+                };
+
+                const local = localById.get(sv.id);
+                if (local) {
+                    if (isDirty(local)) return; // 端末側の未送信の変更を優先（この後送信される）
+                    const changed = (local.updatedAt || 0) !== rec.updatedAt
+                        || localKey(local) !== serverKey(rec)
+                        || (local.notes || '') !== rec.notes;
+                    if (changed) {
+                        Object.assign(local, rec);
+                        touched.push(local);
+                        updated++;
+                    }
                 } else {
-                    console.warn('自動同期スキップ:', err);
+                    const key = serverKey(rec);
+                    const twin = unsyncedByKey.get(key);
+                    if (twin) {
+                        // 同じ内容の未送信データ → シート側IDに統一（重複防止）
+                        unsyncedByKey.delete(key);
+                        twin.id = sv.id;
+                        if ((twin.notes || '') === rec.notes) {
+                            twin.synced = true;
+                            twin.updatedAt = rec.updatedAt || twin.updatedAt;
+                        }
+                    } else {
+                        appData.visits.push(rec);
+                        touched.push(rec);
+                        added++;
+                    }
+                }
+            });
+
+            // 他端末で削除された記録を反映（ただしシートが空のときは「再アップロード」扱い）
+            if (serverVisits.length === 0) {
+                appData.visits.forEach(v => { if (v.synced === true) v.synced = false; });
+            } else {
+                const before = appData.visits.length;
+                appData.visits = appData.visits.filter(v => !(v.synced === true && !serverIds.has(v.id)));
+                removed = before - appData.visits.length;
+            }
+
+            // 病院の紐づけ
+            if (metaAdopted) {
+                appData.visits.forEach(v => {
+                    if (v.hospitalId && !getHospitalById(v.hospitalId)) {
+                        const h = appData.hospitals.find(x => x.name === normText(v.hospitalName));
+                        if (h) v.hospitalId = h.id;
+                    }
+                });
+            }
+            touched.forEach(resolveHospitalFor);
+
+            return { added, updated, removed };
+        }
+
+        async function pullFromSheet() {
+            if (!isGasReady() || pulling) return { ok: false, skipped: true };
+            pulling = true;
+            updateSyncBadge();
+            try {
+                const url = savedGasUrl + (savedGasUrl.includes('?') ? '&' : '?') + '_=' + Date.now();
+                const res = await fetch(url, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+                if (!res.ok) throw new Error(`HTTPエラー (${res.status})`);
+                const text = await res.text();
+                let json;
+                try { json = JSON.parse(text); } catch (e) { throw new Error(diagnoseGasText(text)); }
+                if (json.status !== 'success') throw new Error(json.message || 'GAS側でエラーが発生しました');
+                if (!json.version || json.version < 2) {
+                    throw new Error('GAS側のコードが古いままです。新しいgas_code.js（v2）を貼り付けて「新バージョン」で再デプロイしてください。');
+                }
+                const result = mergeFromServer(json);
+                appData.initialPullDone = true;
+                await persistOnly();
+                return Object.assign({ ok: true }, result);
+            } catch (err) {
+                syncError = getErrorReason(err);
+                if (/Failed to fetch|NetworkError|Load failed/i.test(syncError)) {
+                    syncError = '通信できませんでした（電波・オフライン）。つながったら自動で再同期します。';
+                }
+                return { ok: false, error: syncError };
+            } finally {
+                pulling = false;
+            }
+        }
+
+        function ensureVisibleMonth() {
+            const monthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+            const hasInCurrentMonth = appData.visits.some(v => v.date && v.date.startsWith(monthPrefix));
+            if (!hasInCurrentMonth && appData.visits.length > 0) {
+                const latest = getLatestVisitDate();
+                if (latest) {
+                    const parts = latest.split('-');
+                    currentYear = parseInt(parts[0], 10);
+                    currentMonth = parseInt(parts[1], 10) - 1;
                 }
             }
+        }
+
+        function refreshAfterSync() {
+            updateHospitalSelects();
+            updatePresetSelects();
+            ensureVisibleMonth();
+            renderCurrentView();
+            try { renderHospitalList(); } catch (e) {}
+        }
+
+        // ---- 取得 → 送信 をまとめて実行 ----
+        async function syncNow(manual = false) {
+            if (!isGasReady()) {
+                if (manual) showAlertModal('URLが未設定です', '先にGoogle Apps ScriptのウェブアプリURL（末尾 /exec）を入力して保存してください。', false);
+                return;
+            }
+            if (syncBusy) return;
+            syncBusy = true;
+            syncError = '';
+            updateSyncBadge();
+            let summary = null;
+            try {
+                const pr = await pullFromSheet();
+                if (pr.ok) {
+                    summary = pr;
+                    if (pr.added || pr.updated || pr.removed) refreshAfterSync();
+                }
+                // 初回の取得に成功するまでは送信しない（重複防止）
+                if (pr.ok || appData.initialPullDone) {
+                    const ok = await flushToSheet();
+                    if (!ok && !syncError) syncError = '送信に失敗しました';
+                }
+            } finally {
+                syncBusy = false;
+                updateDataStatusBar();
+            }
+
+            if (manual) {
+                if (syncError) {
+                    showToast('同期できませんでした', false);
+                    showAlertModal('同期できませんでした', syncError, false);
+                } else {
+                    const s = summary || { added: 0, updated: 0, removed: 0 };
+                    showToast('同期しました', true);
+                    showAlertModal('同期しました', `シートから取得：追加 ${s.added}件 / 更新 ${s.updated}件 / 削除反映 ${s.removed}件\n未送信：${getPendingCount()}件`, true);
+                }
+            } else if (summary && summary.added > 0) {
+                showToast(`スプレッドシートから${summary.added}件を復元しました`, true);
+            }
+        }
+
+        function scheduleSync(delay = 700) {
+            if (!isGasReady() || !autoSyncEnabled) return;
+            clearTimeout(syncTimer);
+            syncTimer = setTimeout(async () => {
+                if (syncBusy || flushing) { scheduleSync(1500); return; }
+                if (!appData.initialPullDone) { syncNow(false); return; }
+                await flushToSheet();
+            }, delay);
+        }
+
+        function flushBeforeLeave() {
+            if (!isGasReady() || !autoSyncEnabled || flushing) return;
+            if (getPendingCount() === 0) return;
+            if (!appData.initialPullDone) return;
+            flushToSheet({ keepalive: true });
+        }
+
+        function registerSyncListeners() {
+            if (syncListenersRegistered) return;
+            syncListenersRegistered = true;
+            window.addEventListener('online', () => { if (autoSyncEnabled) syncNow(false); });
+            window.addEventListener('pagehide', flushBeforeLeave);
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    flushBeforeLeave();
+                } else if (autoSyncEnabled && isGasReady()) {
+                    syncNow(false);
+                }
+            });
+            setInterval(() => {
+                if (document.visibilityState === 'visible' && autoSyncEnabled && isGasReady()) syncNow(false);
+            }, 60000);
+        }
+
+        function updateSyncBadge() {
+            const badge = document.getElementById('status-gas-badge');
+            const text = document.getElementById('status-gas-text');
+            if (!badge || !text) return;
+            const base = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border active:scale-95 transition';
+            const amber = 'bg-amber-50 border-amber-300 text-amber-900';
+            const rose = 'bg-rose-50 border-rose-300 text-rose-800';
+            const green = 'bg-emerald-50 border-emerald-200 text-emerald-800';
+            let cls = amber, msg = '';
+            const n = getPendingCount();
+            if (!isGasReady()) {
+                msg = '未連携：この端末内のみ保存（タップして設定）';
+            } else if (syncBusy || flushing || pulling) {
+                msg = '同期中…';
+            } else if (syncError) {
+                cls = rose;
+                msg = `同期エラー${n ? '・未送信' + n + '件' : ''}（タップで再試行）`;
+            } else if (n > 0) {
+                msg = `未送信 ${n}件（タップで送信）`;
+            } else {
+                cls = green;
+                const t = lastSyncAt ? new Date(lastSyncAt) : null;
+                msg = t ? `同期済み ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}` : 'シート連携ON';
+            }
+            badge.className = `${base} ${cls}`;
+            text.textContent = msg;
+            badge.title = syncError || '';
+        }
+
+        function onSyncBadgeClick() {
+            if (!isGasReady()) { openSyncModal(); return; }
+            syncNow(true);
         }
 
         async function restoreFromSheet() {
@@ -1612,13 +1934,138 @@
                 showAlertModal('URLの形式エラー', 'GASのウェブアプリURLは末尾が「/exec」のものを入力してください。', false);
                 return;
             }
+            await syncNow(true);
+        }
+
+        async function sendAllVisitsToSheet() {
+            if (!isGasReady()) {
+                showAlertModal('URLが未設定です', '先にGoogle Apps ScriptのウェブアプリURL（末尾 /exec）を入力して保存してください。', false);
+                return;
+            }
+            if (appData.visits.length === 0) {
+                showToast('送信する通院記録がありません', false);
+                return;
+            }
             showConfirm(
-                'スプレッドシートから復元',
-                'スプレッドシートに保存されている病院・通院履歴を読み込んで端末へ復元しますか？',
+                'スプレッドシートへ全件再送信',
+                `${appData.visits.length}件の通院記録をシートへ送り直します。\n（IDで管理しているので重複行は増えません）`,
                 async () => {
-                    await executeRestoreFromSheet(false);
+                    appData.visits.forEach(v => { v.synced = false; });
+                    markMetaDirty();
+                    await persistOnly();
+                    await syncNow(true);
                 }
             );
+        }
+
+        // ---- JSONバックアップ ----
+        function exportJsonBackup() {
+            try {
+                const backup = {
+                    app: 'hospital_tracker',
+                    exportedAt: new Date().toISOString(),
+                    hospitals: appData.hospitals,
+                    visits: appData.visits,
+                    reasonPresets: appData.reasonPresets,
+                    rehabPresets: appData.rehabPresets
+                };
+                const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `通院記録バックアップ_${new Date().toISOString().slice(0, 10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showToast('バックアップを保存しました', true);
+            } catch (err) {
+                showToast('バックアップできませんでした: ' + getErrorReason(err), false);
+            }
+        }
+
+        function handleJsonFileImport(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async () => {
+                try {
+                    const data = JSON.parse(String(reader.result || ''));
+                    if (!data || !Array.isArray(data.visits)) throw new Error('バックアップファイルの形式が正しくありません');
+                    const idMap = {};
+                    (Array.isArray(data.hospitals) ? data.hospitals : []).forEach(h => {
+                        if (!h || !h.name) return;
+                        let ex = appData.hospitals.find(x => x.id === h.id)
+                              || appData.hospitals.find(x => x.name === h.name && normText(x.dept) === normText(h.dept));
+                        if (!ex) {
+                            ex = { id: h.id || generateId('h'), name: h.name, dept: h.dept || '' };
+                            appData.hospitals.push(ex);
+                        }
+                        idMap[h.id] = ex.id;
+                    });
+                    let added = 0;
+                    data.visits.forEach(v => {
+                        if (!v || !v.id || appData.visits.some(x => x.id === v.id)) return;
+                        appData.visits.push({
+                            id: v.id,
+                            hospitalId: idMap[v.hospitalId] || v.hospitalId || '',
+                            hospitalName: v.hospitalName || '',
+                            date: v.date || '',
+                            time: v.time || '',
+                            reason: v.reason || '',
+                            rehab: v.rehab || '',
+                            notes: v.notes || '',
+                            updatedAt: Date.now(),
+                            synced: false
+                        });
+                        added++;
+                    });
+                    ['reasonPresets', 'rehabPresets'].forEach(k => {
+                        (Array.isArray(data[k]) ? data[k] : []).forEach(p => {
+                            if (p && !appData[k].includes(p)) appData[k].push(p);
+                        });
+                    });
+                    markMetaDirty();
+                    await saveAppData();
+                    refreshAfterSync();
+                    showToast(`バックアップから${added}件を読み込みました`, true);
+                    showAlertModal('読み込み完了', `バックアップから新しく追加された記録：${added}件`, true);
+                } catch (err) {
+                    showToast('読み込めませんでした', false);
+                    showAlertModal('読み込めませんでした', getErrorReason(err), false);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.onerror = () => showToast('ファイルを読み込めませんでした', false);
+            reader.readAsText(file, 'utf-8');
+        }
+
+        // ---- URL埋め込み用の1行 ----
+        function copyDefaultUrlLine() {
+            const inputUrl = (document.getElementById('gas-url-input').value || '').trim() || savedGasUrl;
+            if (!inputUrl) {
+                showToast('先にGASのウェブアプリURLを入力してください', false);
+                return;
+            }
+            const line = `const DEFAULT_GAS_URL = '${inputUrl.replace(/'/g, '')}';`;
+            let ok = false;
+            try {
+                const temp = document.createElement('textarea');
+                temp.value = line;
+                temp.style.position = 'fixed';
+                temp.style.opacity = '0';
+                document.body.appendChild(temp);
+                temp.select();
+                ok = document.execCommand('copy');
+                document.body.removeChild(temp);
+            } catch (e) {}
+            if (!ok && navigator.clipboard) { try { navigator.clipboard.writeText(line); ok = true; } catch (e) {} }
+            if (ok) {
+                showAlertModal('コピーしました', 'index.html の中の\nconst DEFAULT_GAS_URL = \'\';\nという1行を、コピーした行に置き換えて保存してください。\n以後、ブラウザのデータが消えても必ずシートと連携します。', true);
+            } else {
+                showAlertModal('コピーできませんでした', line, false);
+            }
         }
 
         function normalizeDateStr(raw) {
@@ -1794,11 +2241,14 @@
                     time,
                     reason,
                     rehab,
-                    notes
+                    notes,
+                    updatedAt: Date.now(),
+                    synced: false
                 });
                 addedCount++;
                 if (date && date > latestDate) latestDate = date;
             }
+            markMetaDirty();
 
             if (addedCount > 0 && latestDate) {
                 const parts = latestDate.split('-');
@@ -1916,22 +2366,12 @@
                 await loadAllData();
                 updateHospitalSelects();
                 updatePresetSelects();
-
-                const monthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-                const hasInCurrentMonth = appData.visits.some(v => v.date && v.date.startsWith(monthPrefix));
-                if (!hasInCurrentMonth && appData.visits.length > 0) {
-                    const latest = getLatestVisitDate();
-                    if (latest) {
-                        const parts = latest.split('-');
-                        currentYear = parseInt(parts[0], 10);
-                        currentMonth = parseInt(parts[1], 10) - 1;
-                    }
-                }
-
+                ensureVisibleMonth();
                 renderCurrentView();
-
-                if (savedGasUrl && savedGasUrl.includes('/exec') && autoSyncEnabled) {
-                    executeRestoreFromSheet(true);
+                updateDataStatusBar();
+                registerSyncListeners();
+                if (isGasReady() && autoSyncEnabled) {
+                    syncNow(false);
                 }
             } catch (err) {
                 console.error('初期化エラー:', err);
