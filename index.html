@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通院・リハビリ管理帳 v1.9.6</title>
-    <!-- Tailwind CSS CDN -->
+    <title>通院・リハビリ管理帳 v1.6.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
@@ -14,7 +13,6 @@
             color: #0f172a;
             -webkit-tap-highlight-color: transparent;
         }
-        /* カレンダーセルの最小高さ */
         .cal-cell {
             min-height: 76px;
         }
@@ -23,7 +21,6 @@
                 min-height: 100px;
             }
         }
-        /* トーストアニメーション（中央寄せの二重ズレを解消） */
         @keyframes slideDownFade {
             0% { opacity: 0; transform: translateY(-16px); }
             100% { opacity: 1; transform: translateY(0); }
@@ -31,7 +28,6 @@
         .toast-enter {
             animation: slideDownFade 0.25s ease-out forwards;
         }
-        /* スクロールバー調整 */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -44,14 +40,13 @@
 </head>
 <body class="min-h-screen pb-16 selection:bg-teal-200 selection:text-teal-900">
 
-    <!-- リアルタイム通知トースト（全操作の保存・失敗アラート） -->
+    <!-- リアルタイム通知トースト -->
     <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-[80] w-[92%] max-w-md pointer-events-none flex flex-col gap-2"></div>
 
     <!-- ヘッダー -->
     <header class="bg-white border-b-2 border-slate-200 sticky top-0 z-30 shadow-sm">
         <div class="max-w-4xl mx-auto px-3 sm:px-5 py-3">
             <div class="flex flex-wrap items-center justify-between gap-2.5">
-                <!-- タイトル・バージョン -->
                 <div class="flex items-center gap-2.5">
                     <div class="w-11 h-11 rounded-2xl bg-teal-700 text-white flex items-center justify-center shadow-sm shrink-0">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
@@ -61,13 +56,12 @@
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
                             <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">通院・リハビリ管理帳</h1>
-                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.9.6</span>
+                            <span class="text-xs font-black text-white bg-teal-700 px-2.5 py-0.5 rounded-full border border-teal-800 shadow-xs">v1.6.4</span>
                         </div>
                         <p class="text-xs font-bold text-slate-600 mt-0.5">文字くっきり・スマホ最適化版</p>
                     </div>
                 </div>
 
-                <!-- ヘッダー操作ボタン -->
                 <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
                     <button type="button" onclick="openSyncModal()" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-emerald-50 border-2 border-emerald-400 text-emerald-900 font-black text-xs sm:text-sm hover:bg-emerald-100 active:scale-95 transition">
                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
@@ -90,37 +84,8 @@
     <!-- メインコンテンツ -->
     <main class="max-w-4xl mx-auto px-3 sm:px-5 pt-4 space-y-4">
 
-        <!-- 保存データ状況バー -->
-        <div id="data-status-bar" class="bg-white rounded-2xl border-2 border-slate-200 px-3.5 py-2.5 shadow-xs flex flex-wrap items-center justify-between gap-2 text-xs font-black">
-            <div class="flex items-center gap-2 flex-wrap">
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 border border-teal-200 text-teal-900">
-                    <span>💾</span>
-                    <span id="status-counts-text">保存中：病院 0件 / 履歴 0件</span>
-                </span>
-                <button type="button" id="status-gas-badge" onclick="onSyncBadgeClick()" class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border bg-amber-50 border-amber-300 text-amber-900">
-                    <span>☁️</span><span id="status-gas-text">同期の状態</span>
-                </button>
-            </div>
-            <button type="button" id="jump-latest-btn" onclick="jumpToLatestVisitMonth()" class="hidden px-3 py-1 rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:scale-95 transition">
-                最新の記録月へ移動 →
-            </button>
-        </div>
-
-        <!-- ストレージ制限警告バナー -->
-        <div id="storage-warning-banner" class="hidden bg-rose-50 border-2 border-rose-400 rounded-2xl p-3.5 text-xs font-bold text-rose-950 space-y-2">
-            <p class="font-black text-sm text-rose-950">⚠️ この端末にデータを保存できない状態です（閉じると消えます）</p>
-            <div id="storage-warning-detail" class="space-y-1.5"></div>
-            <div class="flex flex-wrap gap-2 pt-1">
-                <button type="button" onclick="location.reload()" class="px-3 py-1.5 rounded-lg bg-rose-700 text-white font-black border-2 border-rose-800 active:scale-95">設定を変えたので再チェック</button>
-                <button type="button" onclick="openSyncModal()" class="px-3 py-1.5 rounded-lg bg-white text-rose-900 font-black border-2 border-rose-400 active:scale-95">スプレッドシート連携を開く</button>
-                <button type="button" onclick="openStorageBreakdown()" class="px-3 py-1.5 rounded-lg bg-white text-rose-900 font-black border-2 border-rose-400 active:scale-95">📊 保存データの内訳</button>
-            </div>
-            <p id="storage-diag-text" class="text-[11px] text-rose-800 font-bold"></p>
-        </div>
-
         <!-- コントロールパネル -->
         <section class="bg-white rounded-2xl border-2 border-slate-200 p-3 sm:p-4 shadow-sm space-y-3">
-            <!-- ビュー切替タブ -->
             <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
                 <button type="button" id="tab-calendar" onclick="switchView('calendar')" class="py-2.5 px-3 rounded-lg font-black text-sm transition flex items-center justify-center gap-1.5 bg-teal-700 text-white shadow-sm">
                     <span>📅</span><span>カレンダー表示</span>
@@ -130,7 +95,6 @@
                 </button>
             </div>
 
-            <!-- 月移動 & 病院フィルター -->
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
                 <div class="flex items-center justify-between bg-slate-50 border-2 border-slate-200 rounded-xl px-2 py-1.5">
                     <button type="button" onclick="changeMonth(-1)" class="w-10 h-10 rounded-lg bg-white border border-slate-300 flex items-center justify-center text-slate-800 font-black hover:bg-slate-100 active:scale-95 transition" aria-label="前の月">
@@ -167,7 +131,6 @@
 
         <!-- カレンダービュー -->
         <section id="view-calendar" class="space-y-2">
-            <!-- 曜日ヘッダー -->
             <div class="grid grid-cols-7 bg-slate-200/80 border-2 border-slate-300 rounded-2xl py-2 text-center text-xs sm:text-sm font-black">
                 <div class="text-rose-600">日</div>
                 <div class="text-slate-800">月</div>
@@ -177,7 +140,6 @@
                 <div class="text-slate-800">金</div>
                 <div class="text-blue-600">土</div>
             </div>
-            <!-- 日付グリッド -->
             <div id="calendar-grid" class="grid grid-cols-7 gap-1 sm:gap-1.5"></div>
             <p class="text-xs font-bold text-slate-600 text-center pt-1">※日付をタップするとその日の通院記録を追加できます。記録バッジをタップすると詳細・修正・削除ができます。</p>
         </section>
@@ -196,7 +158,9 @@
 
     </main>
 
-    <!-- モーダル1: 通院記録 追加・修正モーダル -->
+    <!-- =========================================================
+         モーダル1: 通院記録 追加・修正
+    ========================================================== -->
     <div id="visit-modal" style="display:none;" class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-lg rounded-2xl border-2 border-slate-300 shadow-2xl my-auto overflow-hidden">
             <div class="bg-teal-700 text-white px-4 py-3.5 flex items-center justify-between">
@@ -204,7 +168,7 @@
                 <button type="button" onclick="closeModal('visit-modal')" class="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center font-black">✕</button>
             </div>
 
-            <form id="visit-form" onsubmit="handleSaveVisit(event)" class="px-4 pt-4 space-y-4 max-h-[calc(100dvh-7rem)] overflow-y-auto">
+            <form id="visit-form" onsubmit="handleSaveVisit(event)" class="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
                 <input type="hidden" id="visit-id">
 
                 <div>
@@ -228,6 +192,7 @@
                     </div>
                 </div>
 
+                <!-- 通院理由（青系） -->
                 <div class="bg-blue-50 border-2 border-blue-300 rounded-2xl p-3.5 space-y-2">
                     <div class="flex items-center justify-between gap-2">
                         <label for="visit-reason" class="text-sm font-black text-blue-950 flex items-center gap-1.5">
@@ -240,8 +205,12 @@
                         <option value="">よく使う理由から選ぶ...</option>
                     </select>
                     <input type="text" id="visit-reason" placeholder="例：定期検診、処方箋の受取、膝の痛み相談" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-blue-300 bg-white font-bold text-slate-900 focus:border-blue-600 focus:outline-none">
+                    <div class="flex justify-end">
+                        <button type="button" onclick="quickAddPreset('reason', 'visit-reason')" class="text-xs font-black px-3 py-1.5 rounded-lg bg-white border-2 border-blue-400 text-blue-800 hover:bg-blue-100 active:scale-95 transition">＋ 入力した文字を理由リストに追加</button>
+                    </div>
                 </div>
 
+                <!-- リハビリ内容（橙系） -->
                 <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 space-y-2">
                     <div class="flex items-center justify-between gap-2">
                         <label for="visit-rehab" class="text-sm font-black text-amber-950 flex items-center gap-1.5">
@@ -254,172 +223,152 @@
                         <option value="">よく使うリハビリから選ぶ...</option>
                     </select>
                     <input type="text" id="visit-rehab" placeholder="例：ストレッチ、筋力トレーニング、電気治療" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-amber-300 bg-white font-bold text-slate-900 focus:border-amber-600 focus:outline-none">
+                    <div class="flex justify-end">
+                        <button type="button" onclick="quickAddPreset('rehab', 'visit-rehab')" class="text-xs font-black px-3 py-1.5 rounded-lg bg-white border-2 border-amber-400 text-amber-900 hover:bg-amber-100 active:scale-95 transition">＋ 入力した文字をリハビリリストに追加</button>
+                    </div>
                 </div>
 
+                <!-- メモ -->
                 <div>
-                    <label for="visit-notes" class="block text-sm font-black text-slate-900 mb-1">メモ・先生の言葉・次回予定など</label>
-                    <textarea id="visit-notes" rows="3" placeholder="気づいたことや次回の持ち物などを自由にメモ" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 font-bold text-slate-900 focus:border-teal-600 focus:outline-none"></textarea>
+                    <label for="visit-notes" class="block text-sm font-black text-slate-900 mb-1">メモ・医師からの指示</label>
+                    <textarea id="visit-notes" rows="3" placeholder="次回の予約や薬の変更点、体調メモなど" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 font-bold text-slate-900 focus:border-teal-600 focus:outline-none"></textarea>
                 </div>
 
-                <div class="sticky bottom-0 z-10 -mx-4 px-4 py-3 bg-white border-t-2 border-slate-400 flex items-center gap-2 shadow-[0_-4px_10px_rgba(0,0,0,0.08)]">
-                    <button type="button" onclick="closeModal('visit-modal')" class="px-4 py-3 rounded-xl border-2 border-slate-500 font-black text-sm text-slate-900 bg-white hover:bg-slate-100">キャンセル</button>
-                    <button type="submit" class="flex-1 py-3 rounded-xl bg-teal-700 text-white font-black text-base border-2 border-teal-900 hover:bg-teal-800 active:scale-95 transition shadow-sm">✓ この内容で保存する</button>
+                <!-- ボタン -->
+                <div class="flex items-center justify-end gap-2 pt-2 border-t-2 border-slate-200">
+                    <button type="button" onclick="closeModal('visit-modal')" class="px-4 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-black text-sm text-slate-700 hover:bg-slate-100">キャンセル</button>
+                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-teal-700 text-white font-black text-sm hover:bg-teal-800 active:scale-95 transition shadow-sm">保存する</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- モーダル2: 通院記録 詳細確認モーダル -->
-    <div id="detail-modal" style="display:none;" class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-3 sm:p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl border-2 border-slate-300 shadow-2xl overflow-hidden">
+    <!-- =========================================================
+         モーダル2: 通院記録 詳細確認
+    ========================================================== -->
+    <div id="detail-modal" style="display:none;" class="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-md rounded-2xl border-2 border-slate-300 shadow-2xl my-auto overflow-hidden">
             <div class="bg-slate-800 text-white px-4 py-3.5 flex items-center justify-between">
-                <h2 class="text-base font-black">通院記録の詳細</h2>
+                <h2 class="text-base sm:text-lg font-black">通院記録の詳細</h2>
                 <button type="button" onclick="closeModal('detail-modal')" class="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center font-black">✕</button>
             </div>
-            <div id="detail-content" class="p-4 space-y-3 max-h-[70vh] overflow-y-auto"></div>
-            <div class="px-4 py-3 bg-slate-50 border-t-2 border-slate-200 flex items-center justify-between gap-2">
+            <div id="detail-content" class="p-4 space-y-3 max-h-[65vh] overflow-y-auto"></div>
+            <div class="p-4 bg-slate-50 border-t-2 border-slate-200 flex items-center justify-between gap-2">
                 <button type="button" id="detail-delete-btn" class="px-4 py-2.5 rounded-xl bg-rose-50 border-2 border-rose-300 text-rose-700 font-black text-sm hover:bg-rose-100 active:scale-95 transition">🗑️ 削除する</button>
                 <div class="flex items-center gap-2">
-                    <button type="button" onclick="closeModal('detail-modal')" class="px-4 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-black text-sm text-slate-700">閉じる</button>
-                    <button type="button" id="detail-edit-btn" class="px-4 py-2.5 rounded-xl bg-teal-700 text-white font-black text-sm hover:bg-teal-800 active:scale-95 transition">✏️ 編集する</button>
+                    <button type="button" onclick="closeModal('detail-modal')" class="px-4 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-black text-sm text-slate-700 hover:bg-slate-100">閉じる</button>
+                    <button type="button" id="detail-edit-btn" class="px-5 py-2.5 rounded-xl bg-teal-700 text-white font-black text-sm hover:bg-teal-800 active:scale-95 transition">✏️ 編集する</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- モーダル3: 病院管理モーダル -->
+    <!-- =========================================================
+         モーダル3: 病院管理（追加・修正・削除・全リセット）
+    ========================================================== -->
     <div id="hospital-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-3 sm:p-4 overflow-y-auto">
-        <div class="bg-white w-full max-w-lg rounded-2xl border-2 border-slate-300 shadow-2xl my-auto overflow-hidden">
+        <div class="bg-white w-full max-w-md rounded-2xl border-2 border-slate-300 shadow-2xl my-auto overflow-hidden">
             <div class="bg-slate-800 text-white px-4 py-3.5 flex items-center justify-between">
-                <h2 class="text-base font-black">🏥 病院の管理（追加・修正・削除）</h2>
+                <h2 class="text-base sm:text-lg font-black">病院の管理</h2>
                 <button type="button" onclick="closeModal('hospital-modal')" class="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center font-black">✕</button>
             </div>
 
-            <div class="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
+            <div class="p-4 space-y-4 max-h-[75vh] overflow-y-auto">
                 <form id="hospital-form" onsubmit="handleSaveHospital(event)" class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3.5 space-y-2.5">
                     <input type="hidden" id="edit-hospital-id">
                     <div class="flex items-center justify-between">
-                        <p id="hospital-form-title" class="text-sm font-black text-slate-900">新しい病院を登録</p>
+                        <p id="hospital-form-title" class="text-xs font-black text-slate-800">新しい病院を登録</p>
                         <button type="button" id="hospital-cancel-edit-btn" onclick="resetHospitalForm()" class="hidden text-xs font-black text-slate-600 underline">新規追加に戻る</button>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <input type="text" id="hospital-name-input" required placeholder="病院名（例：〇〇整形外科）" class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-bold text-sm text-slate-900 focus:border-teal-600 focus:outline-none">
-                        <input type="text" id="hospital-dept-input" placeholder="診療科（例：リハビリ科）" class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-bold text-sm text-slate-900 focus:border-teal-600 focus:outline-none">
-                    </div>
+                    <input type="text" id="hospital-name-input" required placeholder="病院名（例：〇〇整形外科クリニック）" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-bold text-sm text-slate-900 focus:border-teal-600 focus:outline-none">
+                    <input type="text" id="hospital-dept-input" placeholder="診療科・メモ（例：整形外科・リハビリテーション科）" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-bold text-sm text-slate-900 focus:border-teal-600 focus:outline-none">
                     <button type="submit" id="hospital-submit-btn" class="w-full py-2.5 rounded-xl bg-teal-700 text-white font-black text-sm hover:bg-teal-800 active:scale-95 transition">病院を登録する</button>
                 </form>
 
-                <div>
-                    <h3 class="text-xs font-black text-slate-600 mb-2">登録済みの病院一覧</h3>
+                <div class="space-y-2">
+                    <p class="text-xs font-black text-slate-600">登録済みの病院一覧</p>
                     <div id="hospital-list-container" class="space-y-2"></div>
                 </div>
 
                 <div class="pt-3 border-t-2 border-slate-200">
-                    <button type="button" onclick="confirmResetAllData()" class="w-full py-2.5 rounded-xl bg-rose-50 border-2 border-rose-300 text-rose-700 font-black text-xs hover:bg-rose-100 active:scale-95 transition">⚠️ 端末内の病院・通院履歴をすべて初期化する</button>
+                    <button type="button" onclick="confirmResetAllData()" class="w-full py-2.5 rounded-xl bg-rose-50 border-2 border-rose-300 text-rose-700 font-black text-xs hover:bg-rose-100 transition">全データ（病院・通院履歴）を初期化する</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- モーダル4: 定型文管理モーダル -->
+    <!-- =========================================================
+         モーダル4: 定型文管理（通院理由・リハビリ内容）
+    ========================================================== -->
     <div id="preset-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-md rounded-2xl border-2 border-slate-300 shadow-2xl my-auto overflow-hidden">
             <div id="preset-modal-header" class="bg-blue-700 text-white px-4 py-3.5 flex items-center justify-between">
-                <h2 id="preset-modal-title" class="text-base font-black">定型文の管理</h2>
+                <h2 id="preset-modal-title" class="text-base sm:text-lg font-black">リスト管理</h2>
                 <button type="button" onclick="closeModal('preset-modal')" class="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center font-black">✕</button>
             </div>
+
             <div class="p-4 space-y-4 max-h-[75vh] overflow-y-auto">
-                <form id="preset-form" onsubmit="handleSavePreset(event)" class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 space-y-2.5">
+                <form id="preset-form" onsubmit="handleSavePreset(event)" novalidate class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 space-y-2.5">
                     <input type="hidden" id="preset-type">
                     <input type="hidden" id="preset-edit-index" value="-1">
                     <div class="flex items-center justify-between">
                         <p id="preset-form-label" class="text-xs font-black text-slate-800">新しい項目を追加</p>
                         <button type="button" id="preset-cancel-edit-btn" onclick="resetPresetForm()" class="hidden text-xs font-black text-slate-600 underline">新規追加に戻る</button>
                     </div>
-                    <div class="flex gap-2">
-                        <input type="text" id="preset-input" required placeholder="項目名を入力" class="flex-1 px-3 py-2 rounded-xl border-2 border-slate-300 bg-white font-bold text-sm text-slate-900 focus:outline-none">
-                        <button type="submit" id="preset-submit-btn" class="px-4 py-2 rounded-xl bg-blue-600 text-white font-black text-sm hover:opacity-90 active:scale-95 transition">追加</button>
+                    <div class="space-y-2.5">
+                        <input type="text" id="preset-input" placeholder="新しい項目名を入力" class="w-full min-w-0 px-3.5 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-bold text-sm text-slate-900 focus:border-blue-600 focus:outline-none">
+                        <button type="button" id="preset-submit-btn" onclick="handleSavePreset(event)" class="w-full py-2.5 px-4 rounded-xl bg-blue-600 text-white font-black text-sm hover:opacity-90 active:scale-95 transition shadow-sm">＋ この項目を追加する</button>
                     </div>
                 </form>
+
                 <div id="preset-list-container" class="space-y-2"></div>
             </div>
         </div>
     </div>
 
-    <!-- モーダル5: スプレッドシート連携 & CSV出力モーダル -->
+    <!-- =========================================================
+         モーダル5: スプレッドシート連携・バックアップ
+    ========================================================== -->
     <div id="sync-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-lg rounded-2xl border-2 border-slate-300 shadow-2xl my-auto overflow-hidden">
             <div class="bg-emerald-700 text-white px-4 py-3.5 flex items-center justify-between">
-                <h2 class="text-base font-black">📊 スプレッドシート連携・バックアップ</h2>
+                <h2 class="text-base sm:text-lg font-black">スプレッドシート連携・バックアップ</h2>
                 <button type="button" onclick="closeModal('sync-modal')" class="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center font-black">✕</button>
             </div>
+
             <div class="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
+                <!-- GAS URL設定（独立保存） -->
                 <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3.5 space-y-2.5">
                     <label for="gas-url-input" class="block text-sm font-black text-slate-900">Google Apps Script (GAS) ウェブアプリURL</label>
-                    <input type="url" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-bold text-xs sm:text-sm text-slate-900 focus:border-emerald-600 focus:outline-none">
-                    <label class="flex items-center gap-2 text-xs font-black text-slate-800 cursor-pointer select-none pt-1">
-                        <input type="checkbox" id="auto-sync-checkbox" onchange="handleToggleAutoSync()" class="w-4 h-4 accent-emerald-700 rounded">
-                        <span>自動同期する（起動時の読み込み／保存・修正・削除のたびの送信／閉じる時の送信）</span>
-                    </label>
-                    <p class="text-xs font-bold text-slate-600">※保存のたびにスプレッドシートへ自動送信されます。スマホ側のデータが消えても、起動時にシートから全件復元されます。<br>※GAS側のコードも新しい版（v2）へ更新・再デプロイが必要です。</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <button type="button" onclick="handleSaveGasUrl()" class="w-full py-2.5 rounded-xl bg-emerald-700 text-white font-black text-sm hover:bg-emerald-800 active:scale-95 transition">連携URLを保存する</button>
-                        <button type="button" onclick="copyBookmarkUrl()" class="w-full py-2.5 rounded-xl bg-white border-2 border-emerald-500 text-emerald-900 font-black text-xs sm:text-sm hover:bg-emerald-50 active:scale-95 transition">🔗 消えない専用URLをコピー</button>
-                    </div>
+                    <input type="url" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 bg-white font-bold text-xs sm:text-sm text-slate-900 focus:border-emerald-600 focus:outline-none">
+                    <button type="button" onclick="handleSaveGasUrl()" class="w-full py-2.5 rounded-xl bg-emerald-700 text-white font-black text-sm hover:bg-emerald-800 active:scale-95 transition">連携URLを保存する</button>
+                    <p class="text-[11px] font-bold text-slate-600">※URLのみを独立して保存するため、変更・保存しても通院履歴や病院データは消えません。</p>
                 </div>
 
-                <div class="grid grid-cols-1 gap-2.5">
+                <!-- 送信・復元・CSV -->
+                <div class="space-y-2.5">
                     <button type="button" onclick="sendAllVisitsToSheet()" class="w-full py-3 px-4 rounded-xl bg-teal-700 text-white font-black text-sm hover:bg-teal-800 active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
-                        <span>📤</span><span>全件をスプレッドシートへ再送信（通常は自動なので不要）</span>
-                    </button>
-                    <button type="button" onclick="openStorageBreakdown()" class="w-full py-3 px-4 rounded-xl bg-white text-slate-900 border-2 border-slate-500 font-black text-sm active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
-                        <span>📊</span><span>端末の保存データの内訳を見る</span>
-                    </button>
-                    <button type="button" onclick="restoreFromSnapshot()" class="w-full py-3 px-4 rounded-xl bg-amber-100 text-amber-950 border-2 border-amber-500 font-black text-sm active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
-                        <span>🛟</span><span>端末内の自動バックアップから復元</span>
+                        <span>📤</span><span>現在の全通院記録をスプレッドシートへ一括送信</span>
                     </button>
                     <button type="button" onclick="restoreFromSheet()" class="w-full py-3 px-4 rounded-xl bg-blue-600 text-white font-black text-sm hover:bg-blue-700 active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
-                        <span>🔄</span><span>今すぐ同期（シートから取得＋未送信分を送信）</span>
+                        <span>📥</span><span>スプレッドシートからデータを復元・取得</span>
                     </button>
                     <button type="button" onclick="exportCSV()" class="w-full py-3 px-4 rounded-xl bg-white border-2 border-slate-300 text-slate-800 font-black text-sm hover:bg-slate-100 active:scale-95 transition flex items-center justify-center gap-2">
                         <span>📄</span><span>CSVファイルとしてダウンロード</span>
                     </button>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button type="button" onclick="exportJsonBackup()" class="py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 text-slate-800 font-black text-xs hover:bg-slate-100 active:scale-95 transition">💾 バックアップ保存(JSON)</button>
-                        <button type="button" onclick="document.getElementById('json-import-input').click()" class="py-2.5 px-3 rounded-xl bg-white border-2 border-slate-300 text-slate-800 font-black text-xs hover:bg-slate-100 active:scale-95 transition">📦 バックアップ読込(JSON)</button>
-                    </div>
-                    <input type="file" id="json-import-input" accept=".json,application/json" class="hidden" onchange="handleJsonFileImport(event)">
-                    <button type="button" onclick="copyDefaultUrlLine()" class="w-full py-2.5 px-4 rounded-xl bg-white border-2 border-emerald-500 text-emerald-900 font-black text-xs hover:bg-emerald-50 active:scale-95 transition">
-                        📌 URLをHTMLに埋め込む用の1行をコピー（最強の消えない対策）
-                    </button>
-                </div>
-
-                <!-- 確実なインポート（CSV読み込み ＆ コピペ取り込み） -->
-                <div class="bg-blue-50 border-2 border-blue-200 rounded-2xl p-3.5 space-y-3">
-                    <p class="text-sm font-black text-blue-950">📂 スプレッドシートから手動インポート（GAS不要）</p>
-                    <p class="text-xs font-bold text-blue-900 leading-relaxed">
-                        GAS連携でエラーが出る場合でも、スプレッドシートからダウンロードしたCSVファイルや、表のコピー＆貼り付けで確実に履歴を取り込めます。
-                    </p>
-                    <input type="file" id="csv-import-input" accept=".csv,.tsv,.txt" class="hidden" onchange="handleCsvFileImport(event)">
-                    <button type="button" onclick="document.getElementById('csv-import-input').click()" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 text-white font-black text-sm hover:bg-indigo-700 active:scale-95 transition flex items-center justify-center gap-2 shadow-sm">
-                        <span>📂</span><span>CSVファイルを選んでインポート</span>
-                    </button>
-                    <div class="pt-2 border-t border-blue-200 space-y-2">
-                        <label for="paste-import-area" class="block text-xs font-black text-blue-950">📋 または、スプレッドシートの行をコピーして下に貼り付け：</label>
-                        <textarea id="paste-import-area" rows="4" placeholder="スプレッドシートの表（ヘッダー行を含めてもOK）をそのままコピーして貼り付けてください" class="w-full px-3 py-2 rounded-xl border-2 border-blue-300 bg-white font-bold text-xs text-slate-900 focus:border-blue-600 focus:outline-none"></textarea>
-                        <button type="button" onclick="handlePasteImport()" class="w-full py-2.5 px-4 rounded-xl bg-blue-700 text-white font-black text-sm hover:bg-blue-800 active:scale-95 transition">貼り付けた履歴をインポートする</button>
-                    </div>
                 </div>
 
                 <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-emerald-900 space-y-1">
-                    <p>💡 <strong>データ保護:</strong> ①端末内（IndexedDB＋localStorage）②スプレッドシート自動同期 の二重保存です。通信できない時の記録は端末内に残り、つながった時に自動送信されます。</p>
+                    <p>💡 <strong>データ保護（二重保存）:</strong> 端末内の「IndexedDB」と「localStorage」の両方に自動保存されます。</p>
                     <p>※プライベート（シークレット）モードやLINE内ブラウザでは端末側データが消去される場合があるため、通常のChrome/Safariでのご利用をおすすめします。</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- モーダル6: 独自確認ダイアログ -->
+    <!-- =========================================================
+         モーダル6: 独自確認ダイアログ
+    ========================================================== -->
     <div id="confirm-modal" style="display:none;" class="fixed inset-0 z-[60] bg-slate-900/70 backdrop-blur-xs items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-2xl border-2 border-slate-300 shadow-2xl overflow-hidden">
             <div class="p-5 space-y-2.5">
@@ -433,7 +382,9 @@
         </div>
     </div>
 
-    <!-- モーダル7: 独自完了アラートダイアログ -->
+    <!-- =========================================================
+         モーダル7: 独自完了アラートダイアログ
+    ========================================================== -->
     <div id="alert-modal" style="display:none;" class="fixed inset-0 z-[70] bg-slate-900/60 backdrop-blur-xs items-center justify-center p-4">
         <div class="bg-white w-full max-w-xs sm:max-w-sm rounded-2xl border-2 border-slate-300 shadow-2xl overflow-hidden text-center">
             <div class="p-6 space-y-3">
@@ -447,33 +398,14 @@
         </div>
     </div>
 
-    <!-- 保存データの内訳 -->
-    <div id="storage-modal" style="display:none;" class="fixed inset-0 z-50 bg-slate-900/60 items-center justify-center p-3 overflow-y-auto">
-        <div class="bg-white rounded-2xl border-2 border-slate-400 w-full max-w-md shadow-xl my-auto">
-            <div class="px-4 py-3 border-b-2 border-slate-300 flex items-center justify-between">
-                <h3 class="font-black text-base text-slate-950">📊 端末の保存データの内訳</h3>
-                <button type="button" onclick="closeModal('storage-modal')" class="w-9 h-9 rounded-lg border-2 border-slate-400 font-black text-slate-900">✕</button>
-            </div>
-            <div class="p-4 space-y-3">
-                <p class="text-xs font-bold text-slate-800">webrich60.github.io の下にある全アプリが、この保存場所（localStorage・上限約10MB）を共有しています。名前の先頭でアプリごとにまとめています。</p>
-                <p id="storage-total" class="text-sm font-black text-slate-950"></p>
-                <div id="storage-groups" class="space-y-2"></div>
-                <div id="storage-idb" class="text-xs font-bold text-slate-800 border-t-2 border-slate-200 pt-2"></div>
-                <button type="button" onclick="closeModal('storage-modal')" class="w-full py-2.5 rounded-xl bg-teal-700 text-white font-black text-sm border-2 border-teal-800">閉じる</button>
-            </div>
-        </div>
-    </div>
-
     <script>
+        /* =========================================================
+           1. 定数・グローバル状態
+        ========================================================== */
         const STORAGE_KEYS = {
             DATA: 'hospital_tracker_data_v1',
-            GAS_URL: 'hospital_tracker_gas_url_v1',
-            AUTO_SYNC: 'hospital_tracker_auto_sync_v1'
+            GAS_URL: 'hospital_tracker_gas_url_v1'
         };
-
-        // 【消えない対策】GASのウェブアプリURLをここに書いておくと、ブラウザのデータが消えても必ず連携されます。
-        // 例: const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/xxxxxxxx/exec';
-        const DEFAULT_GAS_URL = '';
 
         const DEFAULT_REASON_PRESETS = ['定期検診', '経過観察', '処方箋の受取', '痛み・症状の相談', '検査結果の確認'];
         const DEFAULT_REHAB_PRESETS = ['ストレッチ・可動域訓練', '筋力トレーニング', '電気・温熱治療', '歩行・バランス訓練', 'マッサージ・手技'];
@@ -482,76 +414,21 @@
             hospitals: [],
             visits: [],
             reasonPresets: [...DEFAULT_REASON_PRESETS],
-            rehabPresets: [...DEFAULT_REHAB_PRESETS],
-            pendingDeletes: [],
-            metaDirty: false,
-            metaUpdatedAt: 0,
-            initialPullDone: false
+            rehabPresets: [...DEFAULT_REHAB_PRESETS]
         };
 
         let savedGasUrl = '';
-        let autoSyncEnabled = true;
-        let storageRestricted = false;
-        let storageDiag = { ls: null, idb: null, cookie: null };
-        let restrictedWarnShown = false;
-        let lastIdbError = '';
-        let lastCacheError = '';
         let memoryFallback = {};
         let currentView = 'calendar';
         let currentYear = new Date().getFullYear();
         let currentMonth = new Date().getMonth();
         let confirmCallback = null;
 
+        /* =========================================================
+           2. 永続化ストレージ（IndexedDB + localStorage + タイムアウト保護）
+        ========================================================== */
         const IDB_NAME = 'HospitalTrackerDB';
         const IDB_STORE = 'kvStore';
-
-        function setCookie(name, value, days = 365) {
-            try {
-                const maxAge = days * 24 * 60 * 60;
-                document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; max-age=${maxAge}; path=/; SameSite=Lax`;
-            } catch (e) {}
-        }
-
-        function getCookie(name) {
-            try {
-                const prefix = encodeURIComponent(name) + '=';
-                const parts = document.cookie.split(';');
-                for (let part of parts) {
-                    part = part.trim();
-                    if (part.startsWith(prefix)) {
-                        return decodeURIComponent(part.slice(prefix.length));
-                    }
-                }
-            } catch (e) {}
-            return null;
-        }
-
-        function getGasUrlFromLocation() {
-            try {
-                const searchParams = new URLSearchParams(window.location.search);
-                const fromQuery = searchParams.get('gas');
-                if (fromQuery && fromQuery.startsWith('http')) return fromQuery.trim();
-                const hash = window.location.hash || '';
-                if (hash.includes('gas=')) {
-                    const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
-                    const fromHash = hashParams.get('gas');
-                    if (fromHash && fromHash.startsWith('http')) return fromHash.trim();
-                }
-            } catch (e) {}
-            return '';
-        }
-
-        function syncGasUrlToAddressBar(url) {
-            try {
-                if (!window.history || !window.history.replaceState) return;
-                const base = window.location.pathname + window.location.search;
-                if (url) {
-                    window.history.replaceState(null, '', `${base}#gas=${encodeURIComponent(url)}`);
-                } else {
-                    window.history.replaceState(null, '', base);
-                }
-            } catch (e) {}
-        }
 
         function openIDB() {
             return new Promise((resolve, reject) => {
@@ -559,6 +436,13 @@
                     reject(new Error('IndexedDB非対応'));
                     return;
                 }
+                let settled = false;
+                const timer = setTimeout(() => {
+                    if (!settled) {
+                        settled = true;
+                        reject(new Error('IndexedDBタイムアウト'));
+                    }
+                }, 1500);
                 const req = indexedDB.open(IDB_NAME, 1);
                 req.onupgradeneeded = (e) => {
                     const db = e.target.result;
@@ -566,8 +450,27 @@
                         db.createObjectStore(IDB_STORE);
                     }
                 };
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => reject(req.error);
+                req.onsuccess = () => {
+                    if (!settled) {
+                        settled = true;
+                        clearTimeout(timer);
+                        resolve(req.result);
+                    }
+                };
+                req.onerror = () => {
+                    if (!settled) {
+                        settled = true;
+                        clearTimeout(timer);
+                        reject(req.error);
+                    }
+                };
+                req.onblocked = () => {
+                    if (!settled) {
+                        settled = true;
+                        clearTimeout(timer);
+                        reject(new Error('IndexedDBブロック'));
+                    }
+                };
             });
         }
 
@@ -598,307 +501,44 @@
                 });
                 return true;
             } catch (e) {
-                lastIdbError = (e && (e.name || e.message)) ? `${e.name || ''} ${e.message || ''}`.trim() : String(e);
                 return false;
             }
-        }
-
-        // ---- 第3の保存先：Cache Storage（localStorage／IndexedDBが使えない時の予備） ----
-        const CACHE_NAME = 'hospital-tracker-store-v1';
-        function cacheUrlFor(key) { return new URL('./__ht_store__/' + encodeURIComponent(key), location.href).toString(); }
-        async function cacheSet(key, val) {
-            try {
-                if (!window.caches) return false;
-                const c = await caches.open(CACHE_NAME);
-                await c.put(cacheUrlFor(key), new Response(val, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } }));
-                const back = await c.match(cacheUrlFor(key));
-                return !!back && (await back.text()) === val;
-            } catch (e) {
-                lastCacheError = (e && (e.name || e.message)) ? `${e.name || ''} ${e.message || ''}`.trim() : String(e);
-                return false;
-            }
-        }
-        async function cacheGet(key) {
-            try {
-                if (!window.caches) return undefined;
-                const c = await caches.open(CACHE_NAME);
-                const r = await c.match(cacheUrlFor(key));
-                return r ? await r.text() : undefined;
-            } catch (e) { return undefined; }
         }
 
         async function safeSetItem(key, valueStr) {
             memoryFallback[key] = valueStr;
-            let lsOk = false;
             try {
                 localStorage.setItem(key, valueStr);
-                lsOk = (localStorage.getItem(key) === valueStr);
             } catch (e) {}
-            if (!lsOk) {
-                // 容量不足などで書けなかった場合、古いコピーが残ると次回それが読まれてしまうので消す
-                try { localStorage.removeItem(key); } catch (e) {}
-            }
-            const idbOk = await idbSet(key, valueStr);
-            const cacheOk = await cacheSet(key, valueStr);
-            if (!lsOk && !idbOk && !cacheOk) {
-                storageRestricted = true;
-                updateDataStatusBar();
-            }
-            return lsOk || idbOk || cacheOk;
+            await idbSet(key, valueStr);
+            return true;
         }
 
         async function safeGetItem(key) {
             let lsVal = null;
-            try { lsVal = localStorage.getItem(key); } catch (e) {}
-            const idbVal = await idbGet(key);
-            const cacheVal = await cacheGet(key);
-            const stampOf = (v) => { try { return Number(JSON.parse(v).savedAt) || 0; } catch (e) { return 0; } };
-            const cands = [lsVal, idbVal, cacheVal].filter(v => typeof v === 'string' && v.length > 0);
-            if (!cands.length) return memoryFallback[key] || null;
-            // 保存日時(savedAt)がいちばん新しいもの。日時が無い値（URLなど）は最初に見つかったもの
-            let best = cands[0], bestStamp = stampOf(best);
-            cands.forEach(v => { const st = stampOf(v); if (st > bestStamp) { best = v; bestStamp = st; } });
-            // ほかの保存先もそろえておく
-            if (lsVal !== best) { try { localStorage.setItem(key, best); } catch (e) { try { localStorage.removeItem(key); } catch (x) {} } }
-            if (idbVal !== best) await idbSet(key, best);
-            if (cacheVal !== best) await cacheSet(key, best);
-            return best;
-        }
-
-        // ---- 端末内の自動バックアップ（最大15世代） ----
-        const SNAP_KEY = 'hospital_tracker_snapshots_v1';
-        async function takeSnapshot(reason) {
             try {
-                if (!appData.visits.length && !appData.hospitals.length) return;
-                let list = [];
-                const raw = ((await idbGet(SNAP_KEY)) || (await cacheGet(SNAP_KEY)));
-                if (typeof raw === 'string') { try { list = JSON.parse(raw) || []; } catch (e) { list = []; } }
-                const body = JSON.stringify({ hospitals: appData.hospitals, visits: appData.visits, reasonPresets: appData.reasonPresets, rehabPresets: appData.rehabPresets });
-                if (list.length && list[0].body === body) return;
-                list.unshift({ at: Date.now(), reason, h: appData.hospitals.length, v: appData.visits.length, body });
-                list = list.slice(0, 15);
-                { const js = JSON.stringify(list); await idbSet(SNAP_KEY, js); await cacheSet(SNAP_KEY, js); }
+                lsVal = localStorage.getItem(key);
             } catch (e) {}
-        }
-
-        async function restoreFromSnapshot() {
-            let list = [];
-            try { list = JSON.parse((((await idbGet(SNAP_KEY)) || (await cacheGet(SNAP_KEY)))) || '[]') || []; } catch (e) {}
-            if (!list.length) { showAlertModal('バックアップがありません', 'この端末には自動バックアップがまだありません。', false); return; }
-            const best = list.slice().sort((a, b) => (b.v - a.v) || (b.at - a.at))[0];
-            const d = new Date(best.at);
-            const when = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-            showConfirm('自動バックアップから復元',
-                `記録がいちばん多いバックアップ（${when}時点：病院 ${best.h}件／履歴 ${best.v}件）を、今のデータに「追加」します。\n今のデータは消えません。`,
-                async () => {
-                    const b = JSON.parse(best.body);
-                    let addV = 0, addH = 0;
-                    (b.hospitals || []).forEach(h => { if (!appData.hospitals.some(x => x.id === h.id || (x.name === h.name && (x.dept || '') === (h.dept || '')))) { appData.hospitals.push(h); addH++; } });
-                    (b.visits || []).forEach(v => { if (!appData.visits.some(x => x.id === v.id)) { v.synced = false; appData.visits.push(v); addV++; } });
-                    markMetaDirty();
-                    await saveAppData();
-                    refreshAfterSync();
-                    showAlertModal('復元しました', `病院 ${addH}件・履歴 ${addV}件を戻しました。`, true);
-                });
-        }
-
-        async function persistOnly() {
-            appData.savedAt = Date.now();
-            const serialized = JSON.stringify(appData);
-            await safeSetItem(STORAGE_KEYS.DATA, serialized);
+            const idbVal = await idbGet(key);
+            if (typeof lsVal === 'string' && lsVal.length > 0 && (!idbVal || lsVal.length >= idbVal.length)) {
+                if (idbVal !== lsVal) await idbSet(key, lsVal);
+                return lsVal;
+            }
+            if (typeof idbVal === 'string' && idbVal.length > 0) {
+                try { localStorage.setItem(key, idbVal); } catch (e) {}
+                return idbVal;
+            }
+            return memoryFallback[key] || null;
         }
 
         async function saveAppData() {
-            await persistOnly();
-            warnIfVolatile();
-            updateDataStatusBar();
-            scheduleSync();
-        }
-
-        // 端末保存がどこまで使えるかを個別にチェック
-        async function diagnoseStorage() {
-            try {
-                const testKey = '__ht_storage_test__';
-                localStorage.setItem(testKey, '1');
-                storageDiag.ls = (localStorage.getItem(testKey) === '1');
-                localStorage.removeItem(testKey);
-            } catch (e) {
-                storageDiag.ls = false;
-            }
-            storageDiag.idb = await idbSet('__ht_idb_test__', '1');
-            storageDiag.idbErr = storageDiag.idb ? '' : lastIdbError;
-            storageDiag.cache = await cacheSet('__ht_cache_test__', '1');
-            try {
-                document.cookie = '__ht_ck=1; max-age=60; path=/; SameSite=Lax';
-                storageDiag.cookie = document.cookie.includes('__ht_ck=1');
-            } catch (e) {
-                storageDiag.cookie = false;
-            }
-            if (!storageDiag.ls && !storageDiag.idb && !storageDiag.cache) storageRestricted = true;
-            try {
-                let total = 0; const keys = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const k = localStorage.key(i); const v = localStorage.getItem(k) || '';
-                    total += (k.length + v.length) * 2; keys.push([k, v.length * 2]);
-                }
-                keys.sort((a, b) => b[1] - a[1]);
-                storageDiag.lsBytes = total;
-                storageDiag.lsTop = keys.slice(0, 3);
-            } catch (e) {}
-            try {
-                if (navigator.storage && navigator.storage.estimate) {
-                    const est = await navigator.storage.estimate();
-                    storageDiag.usage = est.usage; storageDiag.quota = est.quota;
-                }
-            } catch (e) {}
-        }
-
-        function fmtBytes(n) {
-            if (!n && n !== 0) return '?';
-            if (n >= 1048576) return (n / 1048576).toFixed(1) + 'MB';
-            return Math.round(n / 1024) + 'KB';
-        }
-
-        function detectInAppBrowser() {
-            const ua = navigator.userAgent || '';
-            if (/Line\//i.test(ua)) return 'LINE';
-            if (/FBAN|FBAV/i.test(ua)) return 'Facebook';
-            if (/Instagram/i.test(ua)) return 'Instagram';
-            if (/; wv\)/.test(ua)) return 'アプリ内ブラウザ';
-            return '';
-        }
-
-        function renderStorageWarning() {
-            const detail = document.getElementById('storage-warning-detail');
-            const diag = document.getElementById('storage-diag-text');
-            if (!detail) return;
-            const inApp = detectInAppBrowser();
-            const ua = navigator.userAgent || '';
-            const isIOS = /iPhone|iPad|iPod/i.test(ua);
-            let html = '';
-            if (inApp) {
-                html = `<p>いま <strong>${escapeHtml(inApp)}</strong> の中のブラウザで開いています。右上（または下）のメニューから<strong>「ブラウザで開く」</strong>を選び、Chrome／Safariで開き直してください。</p>`;
-            } else if (isIOS) {
-                html = `<p>Safariの<strong>プライベートモード</strong>か、<strong>「すべてのCookieをブロック」</strong>がONになっている可能性があります。</p>
-                <p>iPhoneの「設定」→「アプリ」→「Safari」→<strong>「すべてのCookieをブロック」をOFF</strong>にして、通常タブで開き直してください。</p>`;
-            } else {
-                html = `<p>通常のChromeでこの表示が出る場合は、<strong>Chromeの設定でこのサイトのデータ保存（Cookie）がブロック</strong>されています。次のどちらかで「許可」にしてください。</p>
-                <p>① アドレスバー左のアイコン（≡のようなマーク）をタップ →「Cookie とサイトデータ」または「権限」→ <strong>許可</strong></p>
-                <p>② Chromeの ⋮ →「設定」→「サイトの設定」→「すべてのサイト」→ <strong>webrich60.github.io</strong> → Cookie／データの保存を <strong>許可</strong>（全体設定の「Cookie」や「オンデバイスのサイトデータ」が「ブロック」なら「許可」に）</p>
-                <p>シークレットタブ（画面が黒っぽいタブ）で開いている場合は、通常のタブで開き直してください。</p>`;
-            }
-            if (!isGasReady()) {
-                html += `<p class="text-rose-800">※ スプレッドシート連携も未設定のため、<strong>今入力した内容は閉じると消えます</strong>。</p>`;
-            } else {
-                html += `<p class="text-emerald-900">✓ スプレッドシート連携は有効です。入力した記録はシートに送られ、次回開いたときにシートから復元されます（このURLのままブックマークしてください）。</p>`;
-            }
-            detail.innerHTML = html;
-            if (diag) {
-                const mark = (b) => b ? '○' : '×';
-                let t = `診断：localStorage ${mark(storageDiag.ls)} ／ IndexedDB ${mark(storageDiag.idb)} ／ 予備(Cache) ${mark(storageDiag.cache)} ／ Cookie ${mark(storageDiag.cookie)}`;
-                if (storageDiag.idbErr) t += `\nIndexedDBエラー：${storageDiag.idbErr}`;
-                if (!storageDiag.cache && lastCacheError) t += `\nCacheエラー：${lastCacheError}`;
-                t += `\nlocalStorage使用量：${fmtBytes(storageDiag.lsBytes)}（上限 約5〜10MB・webrich60.github.io の全アプリ共通）`;
-                if (storageDiag.usage !== undefined) t += `\nサイト全体の使用量：${fmtBytes(storageDiag.usage)} ／ 上限 ${fmtBytes(storageDiag.quota)}`;
-                if (storageDiag.lsTop && storageDiag.lsTop.length) t += `\n大きい保存データ：` + storageDiag.lsTop.map(x => `${x[0]}（${fmtBytes(x[1])}）`).join('、');
-                diag.textContent = t;
-                diag.style.whiteSpace = 'pre-line';
-            }
-        }
-
-        // 保存できない状態で入力したときに一度だけ強く警告
-        function warnIfVolatile() {
-            if (!storageRestricted || restrictedWarnShown) return;
-            restrictedWarnShown = true;
-            showAlertModal(
-                '⚠️ この端末には保存されていません',
-                isGasReady()
-                    ? 'ブラウザの設定で端末への保存がブロックされています。\n記録はスプレッドシートには送られますが、画面上部の赤い案内に沿ってブラウザの設定を「許可」にしてください。'
-                    : 'ブラウザの設定で端末への保存がブロックされており、スプレッドシート連携も未設定です。\nこのままでは画面を閉じると入力内容が消えます。\n画面上部の赤い案内に沿ってブラウザの設定を「許可」にしてください。',
-                false
-            );
-        }
-
-        function storageGroupOf(key) {
-            const parts = String(key).split('_').filter(Boolean);
-            if (parts.length >= 2) return parts[0] + '_' + parts[1];
-            return parts[0] || key;
-        }
-
-        function collectStorageGroups() {
-            const groups = {};
-            let total = 0;
-            try {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const k = localStorage.key(i);
-                    const v = localStorage.getItem(k) || '';
-                    const bytes = (k.length + v.length) * 2;
-                    total += bytes;
-                    const g = storageGroupOf(k);
-                    if (!groups[g]) groups[g] = { name: g, bytes: 0, keys: [] };
-                    groups[g].bytes += bytes;
-                    groups[g].keys.push([k, bytes]);
-                }
-            } catch (e) {}
-            const list = Object.values(groups).sort((a, b) => b.bytes - a.bytes);
-            list.forEach(g => g.keys.sort((a, b) => b[1] - a[1]));
-            return { list, total };
-        }
-
-        async function openStorageBreakdown() {
-            const { list, total } = collectStorageGroups();
-            document.getElementById('storage-total').textContent = `localStorage 合計：${fmtBytes(total)}（${list.length}グループ）`;
-            const box = document.getElementById('storage-groups');
-            box.innerHTML = list.length ? list.map((g, gi) => {
-                const pct = total ? Math.round(g.bytes / total * 100) : 0;
-                const isMine = g.name === 'hospital_tracker' || g.name.startsWith('__ht');
-                const keysHtml = g.keys.slice(0, 8).map(k => `<div class="flex justify-between gap-2"><span class="break-all">${escapeHtml(k[0])}</span><span class="shrink-0">${fmtBytes(k[1])}</span></div>`).join('')
-                    + (g.keys.length > 8 ? `<div>…ほか ${g.keys.length - 8}件</div>` : '');
-                return `<div class="border-2 ${isMine ? 'border-teal-600' : 'border-slate-400'} rounded-xl p-3">
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="font-black text-sm text-slate-950 break-all">${escapeHtml(g.name)}${isMine ? '（このアプリ）' : ''}</div>
-                        <div class="font-black text-sm text-slate-950 shrink-0">${fmtBytes(g.bytes)}・${pct}%</div>
-                    </div>
-                    <details class="mt-1 text-[11px] font-bold text-slate-700"><summary class="cursor-pointer">中身 ${g.keys.length}件</summary><div class="mt-1 space-y-0.5">${keysHtml}</div></details>
-                    ${isMine ? '' : `<button type="button" onclick="deleteStorageGroup(${gi})" class="mt-2 w-full py-2 rounded-lg bg-rose-700 text-white font-black text-xs border-2 border-rose-800 active:scale-95">このグループを削除</button>`}
-                </div>`;
-            }).join('') : '<p class="text-sm font-bold text-slate-800">データはありません</p>';
-            window.__storageGroups = list;
-            let idbText = '';
-            try {
-                if (indexedDB && indexedDB.databases) {
-                    const dbs = await indexedDB.databases();
-                    idbText = 'IndexedDB のデータベース：' + (dbs.length ? dbs.map(d => escapeHtml(d.name)).join('、') : 'なし');
-                }
-            } catch (e) { idbText = 'IndexedDB：一覧を取得できませんでした'; }
-            try {
-                if (navigator.storage && navigator.storage.estimate) {
-                    const est = await navigator.storage.estimate();
-                    idbText += `<br>localStorage以外（IndexedDB・キャッシュ等）の使用量：${fmtBytes(est.usage)}`;
-                }
-            } catch (e) {}
-            document.getElementById('storage-idb').innerHTML = idbText;
-            document.getElementById('storage-modal').style.display = 'flex';
-        }
-
-        function deleteStorageGroup(idx) {
-            const g = (window.__storageGroups || [])[idx];
-            if (!g) return;
-            showConfirm('保存データの削除',
-                `「${g.name}」で始まるデータ ${g.keys.length}件（${fmtBytes(g.bytes)}）を、このスマホから削除します。\nそのアプリの端末内データ（未送信のデータを含む）は元に戻せません。\n本当に削除しますか？`,
-                () => {
-                    let n = 0;
-                    g.keys.forEach(k => { try { localStorage.removeItem(k[0]); n++; } catch (e) {} });
-                    showToast(`${n}件を削除しました`, true);
-                    openStorageBreakdown();
-                });
+            await safeSetItem(STORAGE_KEYS.DATA, JSON.stringify(appData));
         }
 
         async function loadAllData() {
             if (navigator.storage && navigator.storage.persist) {
                 try { await navigator.storage.persist(); } catch (e) {}
             }
-            await diagnoseStorage();
             try {
                 const rawData = await safeGetItem(STORAGE_KEYS.DATA);
                 if (rawData) {
@@ -907,34 +547,21 @@
                     appData.visits = Array.isArray(parsed.visits) ? parsed.visits : [];
                     appData.reasonPresets = Array.isArray(parsed.reasonPresets) ? parsed.reasonPresets : [...DEFAULT_REASON_PRESETS];
                     appData.rehabPresets = Array.isArray(parsed.rehabPresets) ? parsed.rehabPresets : [...DEFAULT_REHAB_PRESETS];
-                    appData.pendingDeletes = Array.isArray(parsed.pendingDeletes) ? parsed.pendingDeletes : [];
-                    appData.metaDirty = !!parsed.metaDirty;
-                    appData.metaUpdatedAt = Number(parsed.metaUpdatedAt) || 0;
-                    appData.initialPullDone = !!parsed.initialPullDone;
                 }
             } catch (err) {
                 console.error('データ読み込みエラー:', err);
             }
-            await takeSnapshot('起動時');
             try {
-                const urlFromLocation = getGasUrlFromLocation();
                 const rawUrl = await safeGetItem(STORAGE_KEYS.GAS_URL);
-                const cookieUrl = getCookie(STORAGE_KEYS.GAS_URL);
-                savedGasUrl = (urlFromLocation || rawUrl || cookieUrl || DEFAULT_GAS_URL || '').trim();
-                if (savedGasUrl) {
-                    await safeSetItem(STORAGE_KEYS.GAS_URL, savedGasUrl);
-                    setCookie(STORAGE_KEYS.GAS_URL, savedGasUrl, 365);
-                    syncGasUrlToAddressBar(savedGasUrl);
-                }
+                savedGasUrl = (rawUrl || '').trim();
             } catch (err) {
                 console.error('URL読み込みエラー:', err);
             }
-            try {
-                const rawAuto = await safeGetItem(STORAGE_KEYS.AUTO_SYNC);
-                autoSyncEnabled = (rawAuto !== 'false');
-            } catch (e) {}
         }
 
+        /* =========================================================
+           3. ユーティリティ・通知（トースト／アラート／確認）
+        ========================================================== */
         function escapeHtml(str) {
             if (str === null || str === undefined) return '';
             return String(str)
@@ -1018,6 +645,9 @@
             if (el) el.style.display = 'none';
         }
 
+        /* =========================================================
+           4. プルダウン更新・ビュー切替・描画
+        ========================================================== */
         function updateHospitalSelects() {
             const filterSel = document.getElementById('hospital-filter');
             const visitSel = document.getElementById('visit-hospital');
@@ -1049,22 +679,6 @@
                     visitSel.value = prevVisit;
                 }
             }
-        }
-
-        // 通院履歴で使われた言葉を「よく使う」一覧に戻す（一覧が消えた場合の復旧）
-        function rebuildPresetsFromHistory() {
-            let added = 0;
-            const pick = (text, list) => {
-                String(text || '').split(/[、,，\n]/).map(x => x.trim()).filter(x => x && x.length <= 30).forEach(x => {
-                    if (!list.includes(x)) { list.push(x); added++; }
-                });
-            };
-            appData.visits.forEach(v => {
-                pick(v.reason, appData.reasonPresets);
-                pick(v.rehab, appData.rehabPresets);
-            });
-            if (added > 0) markMetaDirty();
-            return added;
         }
 
         function updatePresetSelects() {
@@ -1114,49 +728,6 @@
             renderCurrentView();
         }
 
-        function updateDataStatusBar() {
-            const countEl = document.getElementById('status-counts-text');
-            if (countEl) {
-                countEl.innerText = `保存中：病院 ${appData.hospitals.length}件 / 履歴 ${appData.visits.length}件`;
-            }
-            updateSyncBadge();
-            const warnBanner = document.getElementById('storage-warning-banner');
-            if (warnBanner) {
-                if (storageRestricted) { warnBanner.classList.remove('hidden'); renderStorageWarning(); }
-                else warnBanner.classList.add('hidden');
-            }
-            const jumpBtn = document.getElementById('jump-latest-btn');
-            if (jumpBtn) {
-                const monthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-                const hasInCurrentMonth = appData.visits.some(v => v.date && v.date.startsWith(monthPrefix));
-                const latestDate = getLatestVisitDate();
-                if (!hasInCurrentMonth && latestDate) {
-                    const parts = latestDate.split('-');
-                    jumpBtn.innerText = `最新の記録（${parseInt(parts[0], 10)}年${parseInt(parts[1], 10)}月）を表示 →`;
-                    jumpBtn.classList.remove('hidden');
-                } else {
-                    jumpBtn.classList.add('hidden');
-                }
-            }
-        }
-
-        function getLatestVisitDate() {
-            let latest = '';
-            appData.visits.forEach(v => {
-                if (v.date && /^\d{4}-\d{2}-\d{2}$/.test(v.date) && v.date > latest) latest = v.date;
-            });
-            return latest;
-        }
-
-        function jumpToLatestVisitMonth() {
-            const latest = getLatestVisitDate();
-            if (!latest) return;
-            const parts = latest.split('-');
-            currentYear = parseInt(parts[0], 10);
-            currentMonth = parseInt(parts[1], 10) - 1;
-            renderCurrentView();
-        }
-
         function changeMonth(delta) {
             currentMonth += delta;
             if (currentMonth < 0) {
@@ -1183,7 +754,6 @@
             } else {
                 renderList();
             }
-            updateDataStatusBar();
         }
 
         function getFilteredVisits(forAllPeriod = false) {
@@ -1323,6 +893,9 @@
             }).join('');
         }
 
+        /* =========================================================
+           5. 通院記録の追加・詳細・修正・削除
+        ========================================================== */
         function openVisitModal(defaultDateISO = null) {
             updateHospitalSelects();
             updatePresetSelects();
@@ -1392,26 +965,21 @@
                     time,
                     reason,
                     rehab,
-                    notes,
-                    updatedAt: Date.now(),
-                    synced: false
+                    notes
                 };
 
                 if (id) {
                     const idx = appData.visits.findIndex(v => v.id === id);
-                    if (idx !== -1) {
-                        appData.visits[idx] = record;
-                    } else {
-                        appData.visits.push(record);
-                    }
+                    if (idx !== -1) appData.visits[idx] = record;
+                    else appData.visits.push(record);
                 } else {
                     appData.visits.push(record);
                 }
 
-                await saveAppData();
                 closeModal('visit-modal');
                 renderCurrentView();
                 showToast(id ? '通院記録を修正して保存しました' : '通院記録を保存しました', true);
+                await saveAppData();
             } catch (err) {
                 showToast('保存できませんでした: ' + getErrorReason(err), false);
             }
@@ -1462,11 +1030,10 @@
                 async () => {
                     try {
                         appData.visits = appData.visits.filter(item => item.id !== id);
-                        addPendingDelete(id);
-                        await saveAppData();
                         closeModal('detail-modal');
                         renderCurrentView();
                         showToast('通院記録を削除しました', true);
+                        await saveAppData();
                     } catch (err) {
                         showToast('削除できませんでした: ' + getErrorReason(err), false);
                     }
@@ -1474,6 +1041,9 @@
             );
         }
 
+        /* =========================================================
+           6. 病院管理（追加・修正・削除・初期化）
+        ========================================================== */
         function openHospitalModal() {
             resetHospitalForm();
             renderHospitalList();
@@ -1518,29 +1088,17 @@
                     if (target) {
                         target.name = name;
                         target.dept = dept;
-                        appData.visits.forEach(v => {
-                            if (v.hospitalId === editId) {
-                                v.hospitalName = name;
-                                v.updatedAt = Date.now();
-                                v.synced = false;
-                            }
-                        });
                     }
                 } else {
-                    appData.hospitals.push({
-                        id: generateId('h'),
-                        name,
-                        dept
-                    });
+                    appData.hospitals.push({ id: generateId('h'), name, dept });
                 }
-                markMetaDirty();
 
-                await saveAppData();
                 resetHospitalForm();
                 renderHospitalList();
                 updateHospitalSelects();
                 renderCurrentView();
                 showToast(editId ? '病院情報を修正して保存しました' : '新しい病院を保存しました', true);
+                await saveAppData();
             } catch (err) {
                 showToast('病院を保存できませんでした: ' + getErrorReason(err), false);
             }
@@ -1555,13 +1113,12 @@
                 async () => {
                     try {
                         appData.hospitals = appData.hospitals.filter(item => item.id !== id);
-                        markMetaDirty();
-                        await saveAppData();
                         resetHospitalForm();
                         renderHospitalList();
                         updateHospitalSelects();
                         renderCurrentView();
                         showToast('病院を削除しました', true);
+                        await saveAppData();
                     } catch (err) {
                         showToast('削除できませんでした: ' + getErrorReason(err), false);
                     }
@@ -1577,7 +1134,7 @@
             }
             container.innerHTML = appData.hospitals.map(h => `
                 <div class="flex items-center justify-between gap-2 p-3 rounded-xl bg-white border-2 border-slate-200">
-                    <div class="min-w-0">
+                    <div class="min-w-0 flex-1">
                         <div class="text-sm font-black text-slate-900 truncate">${escapeHtml(h.name)}</div>
                         ${h.dept ? `<div class="text-xs font-bold text-slate-600 truncate">${escapeHtml(h.dept)}</div>` : ''}
                     </div>
@@ -1592,21 +1149,19 @@
         function confirmResetAllData() {
             showConfirm(
                 '全データの初期化',
-                '登録されている病院と通院履歴をすべて削除して初期状態に戻します。\n※スプレッドシート連携中は、シート上の記録も削除されます。\n本当によろしいですか？\n（※GAS連携URLは保持されます）',
+                '登録されている病院と通院履歴をすべて削除して初期状態に戻します。\n本当によろしいですか？\n（※GAS連携URLは保持されます）',
                 async () => {
                     try {
-                        appData.visits.forEach(v => addPendingDelete(v.id));
                         appData.hospitals = [];
                         appData.visits = [];
                         appData.reasonPresets = [...DEFAULT_REASON_PRESETS];
                         appData.rehabPresets = [...DEFAULT_REHAB_PRESETS];
-                        markMetaDirty();
-                        await saveAppData();
                         renderHospitalList();
                         updateHospitalSelects();
                         updatePresetSelects();
                         renderCurrentView();
                         showToast('全データを初期化しました', true);
+                        await saveAppData();
                     } catch (err) {
                         showToast('初期化できませんでした: ' + getErrorReason(err), false);
                     }
@@ -1614,6 +1169,9 @@
             );
         }
 
+        /* =========================================================
+           7. 定型文管理（通院理由・リハビリ内容の追加・修正・削除）
+        ========================================================== */
         function openPresetModal(type) {
             document.getElementById('preset-type').value = type;
             const header = document.getElementById('preset-modal-header');
@@ -1623,11 +1181,11 @@
             if (type === 'reason') {
                 header.className = 'bg-blue-700 text-white px-4 py-3.5 flex items-center justify-between';
                 title.innerText = '通院理由リストの管理';
-                submitBtn.className = 'px-4 py-2 rounded-xl bg-blue-600 text-white font-black text-sm hover:opacity-90 active:scale-95 transition';
+                submitBtn.className = 'w-full py-2.5 px-4 rounded-xl bg-blue-600 text-white font-black text-sm hover:opacity-90 active:scale-95 transition shadow-sm';
             } else {
                 header.className = 'bg-amber-600 text-white px-4 py-3.5 flex items-center justify-between';
                 title.innerText = 'リハビリ内容リストの管理';
-                submitBtn.className = 'px-4 py-2 rounded-xl bg-amber-600 text-white font-black text-sm hover:opacity-90 active:scale-95 transition';
+                submitBtn.className = 'w-full py-2.5 px-4 rounded-xl bg-amber-600 text-white font-black text-sm hover:opacity-90 active:scale-95 transition shadow-sm';
             }
 
             resetPresetForm();
@@ -1639,7 +1197,7 @@
             document.getElementById('preset-edit-index').value = '-1';
             document.getElementById('preset-input').value = '';
             document.getElementById('preset-form-label').innerText = '新しい項目を追加';
-            document.getElementById('preset-submit-btn').innerText = '追加';
+            document.getElementById('preset-submit-btn').innerText = '＋ この項目を追加する';
             document.getElementById('preset-cancel-edit-btn').classList.add('hidden');
         }
 
@@ -1647,17 +1205,16 @@
             const type = document.getElementById('preset-type').value;
             const list = type === 'reason' ? appData.reasonPresets : appData.rehabPresets;
             if (index < 0 || index >= list.length) return;
-
             document.getElementById('preset-edit-index').value = String(index);
             document.getElementById('preset-input').value = list[index];
             document.getElementById('preset-form-label').innerText = '項目を修正';
-            document.getElementById('preset-submit-btn').innerText = '更新';
+            document.getElementById('preset-submit-btn').innerText = '✓ 修正を更新保存する';
             document.getElementById('preset-cancel-edit-btn').classList.remove('hidden');
             document.getElementById('preset-input').focus();
         }
 
         async function handleSavePreset(e) {
-            e.preventDefault();
+            if (e && typeof e.preventDefault === 'function') e.preventDefault();
             try {
                 const type = document.getElementById('preset-type').value;
                 const editIdx = parseInt(document.getElementById('preset-edit-index').value, 10);
@@ -1665,26 +1222,56 @@
 
                 if (!val) {
                     showToast('項目名を入力してください', false);
+                    document.getElementById('preset-input').focus();
                     return;
                 }
+
+                if (!Array.isArray(appData.reasonPresets)) appData.reasonPresets = [...DEFAULT_REASON_PRESETS];
+                if (!Array.isArray(appData.rehabPresets)) appData.rehabPresets = [...DEFAULT_REHAB_PRESETS];
 
                 const list = type === 'reason' ? appData.reasonPresets : appData.rehabPresets;
                 if (editIdx >= 0 && editIdx < list.length) {
                     list[editIdx] = val;
                 } else {
-                    if (!list.includes(val)) {
-                        list.push(val);
+                    if (list.includes(val)) {
+                        showToast('同じ項目がすでに登録されています', false);
+                        return;
                     }
+                    list.push(val);
                 }
-                markMetaDirty();
 
-                await saveAppData();
                 resetPresetForm();
                 renderPresetList();
                 updatePresetSelects();
-                showToast(editIdx >= 0 ? '項目を修正して保存しました' : '新しい項目を保存しました', true);
+                showToast(editIdx >= 0 ? '項目を修正して保存しました' : `「${val}」を追加して保存しました`, true);
+                await saveAppData();
             } catch (err) {
                 showToast('保存できませんでした: ' + getErrorReason(err), false);
+            }
+        }
+
+        async function quickAddPreset(type, inputId) {
+            try {
+                const inp = document.getElementById(inputId);
+                const val = inp ? inp.value.trim() : '';
+                if (!val) {
+                    showToast('先にテキスト欄へ項目名を入力してください', false);
+                    if (inp) inp.focus();
+                    return;
+                }
+                if (!Array.isArray(appData.reasonPresets)) appData.reasonPresets = [...DEFAULT_REASON_PRESETS];
+                if (!Array.isArray(appData.rehabPresets)) appData.rehabPresets = [...DEFAULT_REHAB_PRESETS];
+                const list = type === 'reason' ? appData.reasonPresets : appData.rehabPresets;
+                if (list.includes(val)) {
+                    showToast('すでにリストに登録されています', false);
+                    return;
+                }
+                list.push(val);
+                updatePresetSelects();
+                showToast(`「${val}」をリストに追加しました`, true);
+                await saveAppData();
+            } catch (err) {
+                showToast('リストに追加できませんでした: ' + getErrorReason(err), false);
             }
         }
 
@@ -1692,7 +1279,6 @@
             const type = document.getElementById('preset-type').value;
             const list = type === 'reason' ? appData.reasonPresets : appData.rehabPresets;
             if (index < 0 || index >= list.length) return;
-
             const name = list[index];
             showConfirm(
                 '項目を削除しますか？',
@@ -1700,12 +1286,11 @@
                 async () => {
                     try {
                         list.splice(index, 1);
-                        markMetaDirty();
-                        await saveAppData();
                         resetPresetForm();
                         renderPresetList();
                         updatePresetSelects();
                         showToast('項目を削除しました', true);
+                        await saveAppData();
                     } catch (err) {
                         showToast('削除できませんでした: ' + getErrorReason(err), false);
                     }
@@ -1725,7 +1310,7 @@
 
             container.innerHTML = list.map((item, idx) => `
                 <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white border-2 border-slate-200">
-                    <span class="text-sm font-bold text-slate-900 truncate">${escapeHtml(item)}</span>
+                    <span class="text-sm font-bold text-slate-900 truncate min-w-0 flex-1">${escapeHtml(item)}</span>
                     <div class="flex items-center gap-1.5 shrink-0">
                         <button type="button" onclick="startEditPreset(${idx})" class="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-300 text-slate-800 font-black text-xs hover:bg-slate-200">✏️ 修正</button>
                         <button type="button" onclick="deletePreset(${idx})" class="px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-300 text-rose-700 font-black text-xs hover:bg-rose-100">🗑️ 削除</button>
@@ -1734,47 +1319,12 @@
             `).join('');
         }
 
+        /* =========================================================
+           8. スプレッドシート連携（URL保存・送信・復元・CSV）
+        ========================================================== */
         function openSyncModal() {
             document.getElementById('gas-url-input').value = savedGasUrl || '';
-            const cb = document.getElementById('auto-sync-checkbox');
-            if (cb) cb.checked = autoSyncEnabled;
             document.getElementById('sync-modal').style.display = 'flex';
-        }
-
-        async function handleToggleAutoSync() {
-            const cb = document.getElementById('auto-sync-checkbox');
-            autoSyncEnabled = !!(cb && cb.checked);
-            await safeSetItem(STORAGE_KEYS.AUTO_SYNC, autoSyncEnabled ? 'true' : 'false');
-            updateDataStatusBar();
-            showToast(autoSyncEnabled ? '起動時の自動同期をONにしました' : '起動時の自動同期をOFFにしました', true);
-        }
-
-        function copyBookmarkUrl() {
-            const inputUrl = document.getElementById('gas-url-input').value.trim() || savedGasUrl;
-            if (!inputUrl) {
-                showToast('先にGASのウェブアプリURLを入力してください', false);
-                return;
-            }
-            const base = window.location.origin + window.location.pathname;
-            const fullUrl = `${base}#gas=${encodeURIComponent(inputUrl)}`;
-            try {
-                const temp = document.createElement('textarea');
-                temp.value = fullUrl;
-                temp.style.position = 'fixed';
-                temp.style.opacity = '0';
-                document.body.appendChild(temp);
-                temp.select();
-                document.execCommand('copy');
-                document.body.removeChild(temp);
-                showToast('消えない専用URLをコピーしました！', true);
-                showAlertModal(
-                    '専用URLをコピーしました',
-                    'このURLをブラウザで開いてブックマーク（またはホーム画面に追加）しておくと、サイトを閉じてもGAS設定とスプレッドシートの履歴が自動で復元されます！',
-                    true
-                );
-            } catch (err) {
-                showToast('コピーに失敗しました', false);
-            }
         }
 
         async function handleSaveGasUrl() {
@@ -1782,461 +1332,57 @@
                 const url = document.getElementById('gas-url-input').value.trim();
                 savedGasUrl = url;
                 await safeSetItem(STORAGE_KEYS.GAS_URL, savedGasUrl);
-                setCookie(STORAGE_KEYS.GAS_URL, savedGasUrl, 365);
-                syncGasUrlToAddressBar(savedGasUrl);
-                updateDataStatusBar();
                 showToast('連携URLを保存しました', true);
-                showAlertModal('保存しました', url ? 'スプレッドシート連携URLを保存しました。\nこれ以降、保存・修正・削除のたびに自動でシートへ送信されます。\n（いま、シートとの同期を開始します）' : '連携URLをクリアしました。', true);
-                if (url && isGasReady()) syncNow(false);
+                showAlertModal('保存しました', url ? 'スプレッドシート連携URLを保存しました。\n（※既存の通院履歴や病院データは保持されています）' : '連携URLをクリアしました。', true);
             } catch (err) {
                 showToast('連携URLを保存できませんでした: ' + getErrorReason(err), false);
                 showAlertModal('保存できませんでした', getErrorReason(err), false);
             }
         }
 
-        // =====================================================================
-        // スプレッドシート同期エンジン（v2）
-        //  ・端末内データ（IndexedDB/localStorage）＝高速キャッシュ
-        //  ・スプレッドシート＝本体（正）。保存・修正・削除のたびに自動送信
-        //  ・送信できなかった分は端末内に「未送信」として残り、再接続時に自動再送
-        //  ・起動時／画面に戻った時／オンライン復帰時に、シートから最新データを取得
-        // =====================================================================
-        let syncBusy = false;
-        let flushing = false;
-        let pulling = false;
-        let syncError = '';
-        let lastSyncAt = 0;
-        let syncTimer = null;
-        let syncListenersRegistered = false;
-        const FLUSH_BATCH = 80;
-        const FLUSH_BATCH_KEEPALIVE = 25;
-
-        function isGasReady() {
-            return !!(savedGasUrl && savedGasUrl.includes('/exec'));
-        }
-
-        function isDirty(v) {
-            return v.synced !== true;
-        }
-
-        function getPendingCount() {
-            let n = appData.visits.filter(isDirty).length + (appData.pendingDeletes || []).length;
-            if (appData.metaDirty) n++;
-            return n;
-        }
-
-        function markMetaDirty() {
-            appData.metaDirty = true;
-            appData.metaUpdatedAt = Date.now();
-        }
-
-        function addPendingDelete(id) {
-            if (!Array.isArray(appData.pendingDeletes)) appData.pendingDeletes = [];
-            if (!appData.pendingDeletes.includes(id)) appData.pendingDeletes.push(id);
-        }
-
-        function visitToPayload(v) {
-            const h = getHospitalById(v.hospitalId);
-            if (!v.updatedAt) v.updatedAt = Date.now();
-            return {
-                id: v.id,
-                hospitalName: h ? h.name : (v.hospitalName || ''),
-                department: h ? (h.dept || '') : (v.department || ''),
-                date: v.date || '',
-                time: v.time || '',
-                reason: v.reason || '',
-                rehab: v.rehab || '',
-                notes: v.notes || '',
-                updatedAt: v.updatedAt
-            };
-        }
-
-        function metaSnapshot() {
-            return {
-                hospitals: appData.hospitals,
-                reasonPresets: appData.reasonPresets,
-                rehabPresets: appData.rehabPresets,
-                updatedAt: appData.metaUpdatedAt || Date.now()
-            };
-        }
-
-        function diagnoseGasText(text) {
-            if (text.includes('ServiceLogin') || text.includes('accounts.google.com')) {
-                return 'GASのアクセス権限が「全員」になっていません。デプロイ設定をご確認ください。';
-            }
-            return 'GASから正しい応答がありません。URL（末尾 /exec）と、新バージョンでの再デプロイをご確認ください。';
-        }
-
-        async function postToGas(body, keepalive = false) {
-            const res = await fetch(savedGasUrl, {
-                method: 'POST',
-                redirect: 'follow',
-                keepalive: !!keepalive,
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(body)
-            });
-            if (!res.ok) throw new Error(`HTTPエラー (${res.status})`);
-            const text = await res.text();
-            let json;
-            try { json = JSON.parse(text); } catch (e) { throw new Error(diagnoseGasText(text)); }
-            if (json.status !== 'success') throw new Error(json.message || 'GAS側でエラーが発生しました');
-            if (!json.version || json.version < 2) {
-                throw new Error('GAS側のコードが古いままです。新しいgas_code.js（v2）を貼り付けて「新バージョン」で再デプロイしてください。');
-            }
-            return json;
-        }
-
-        // ---- 端末 → シート ----
-        async function flushToSheet(opts = {}) {
-            if (!isGasReady() || flushing) return false;
-            flushing = true;
-            updateSyncBadge();
-            try {
-                for (let guard = 0; guard < 60; guard++) {
-                    const dirty = appData.visits.filter(isDirty);
-                    const dels = (appData.pendingDeletes || []).slice(0, 200);
-                    const needMeta = !!appData.metaDirty;
-                    if (!dirty.length && !dels.length && !needMeta) break;
-
-                    const batch = dirty.slice(0, opts.keepalive ? FLUSH_BATCH_KEEPALIVE : FLUSH_BATCH);
-                    const sent = batch.map(v => {
-                        const payload = visitToPayload(v);
-                        return { id: v.id, stamp: v.updatedAt, payload };
-                    });
-                    const sentMeta = needMeta ? metaSnapshot() : null;
-                    const body = { action: 'sync', visits: sent.map(x => x.payload), deleteIds: dels, meta: sentMeta };
-
-                    await postToGas(body, opts.keepalive);
-
-                    sent.forEach(x => {
-                        const cur = appData.visits.find(v => v.id === x.id);
-                        if (cur && cur.updatedAt === x.stamp) cur.synced = true;
-                    });
-                    const delSet = new Set(dels);
-                    appData.pendingDeletes = (appData.pendingDeletes || []).filter(id => !delSet.has(id));
-                    if (sentMeta && appData.metaUpdatedAt === sentMeta.updatedAt) appData.metaDirty = false;
-                    await persistOnly();
-                    if (opts.keepalive) break;
-                }
-                lastSyncAt = Date.now();
-                syncError = '';
-                return true;
-            } catch (err) {
-                syncError = getErrorReason(err);
-                if (/Failed to fetch|NetworkError|Load failed/i.test(syncError)) {
-                    syncError = '通信できませんでした（電波・オフライン）。つながったら自動で再送します。';
-                }
-                return false;
-            } finally {
-                flushing = false;
-                updateDataStatusBar();
-            }
-        }
-
-        // ---- シート → 端末 ----
-        function normText(x) { return String(x || '').trim(); }
-
-        function localKey(v) {
-            const h = getHospitalById(v.hospitalId);
-            return [normText(h ? h.name : v.hospitalName), v.date || '', v.time || '', normText(v.reason), normText(v.rehab)].join('\u0001');
-        }
-
-        function serverKey(r) {
-            return [normText(r.hospitalName), r.date || '', r.time || '', normText(r.reason), normText(r.rehab)].join('\u0001');
-        }
-
-        function resolveHospitalFor(v) {
-            const name = normText(v.hospitalName);
-            if (!name) return;
-            const dept = normText(v.department);
-            let h = appData.hospitals.find(x => x.name === name && normText(x.dept) === dept)
-                 || appData.hospitals.find(x => x.name === name);
-            if (!h) {
-                h = { id: generateId('h'), name, dept };
-                appData.hospitals.push(h);
-                markMetaDirty();
-            }
-            v.hospitalId = h.id;
-            delete v.department;
-        }
-
-        function mergeFromServer(json) {
-            const serverVisits = Array.isArray(json.visits) ? json.visits : [];
-            let added = 0, updated = 0, removed = 0, metaAdopted = false;
-
-            // 設定（病院リスト・よく使う項目）
-            const sm = json.meta;
-            if (sm && Array.isArray(sm.hospitals)) {
-                // 【v1.9.3】シート側の設定で端末の病院リストを「置き換え」ない。足りない分だけ追加する
-                if (appData.metaDirty) {
-                    // 端末側に未送信の設定変更（病院の削除など）がある → 端末側を優先し、この後シートへ送る
-                } else if (appData.hospitals.length === 0) {
-                    appData.hospitals = sm.hospitals.filter(h => h && h.name);
-                    metaAdopted = true;
-                } else {
-                    let addedH = 0;
-                    sm.hospitals.forEach(sh => {
-                        if (!sh || !sh.name) return;
-                        const exists = appData.hospitals.some(h => h.id === sh.id
-                            || (normText(h.name) === normText(sh.name) && normText(h.dept) === normText(sh.dept)));
-                        if (!exists) { appData.hospitals.push(sh); addedH++; }
-                    });
-                    if (addedH) metaAdopted = true;
-                }
-                if (!appData.metaDirty) {
-                    ['reasonPresets', 'rehabPresets'].forEach(k => {
-                        (Array.isArray(sm[k]) ? sm[k] : []).forEach(p => {
-                            if (p && !appData[k].includes(p)) { appData[k].push(p); metaAdopted = true; }
-                        });
-                    });
-                    if (metaAdopted) markMetaDirty();
-                }
-            } else if (!appData.metaDirty) {
-                // シート側に設定がまだ無い → 端末の設定をアップロードする
-                markMetaDirty();
-            }
-
-            const pendingDel = new Set(appData.pendingDeletes || []);
-            const serverIds = new Set();
-            const localById = new Map(appData.visits.map(v => [v.id, v]));
-            const unsyncedByKey = new Map();
-            appData.visits.filter(isDirty).forEach(v => unsyncedByKey.set(localKey(v), v));
-            const touched = [];
-
-            serverVisits.forEach(sv => {
-                if (!sv || !sv.id) return;
-                serverIds.add(sv.id);
-                if (pendingDel.has(sv.id)) return;
-
-                const rec = {
-                    id: sv.id,
-                    hospitalId: '',
-                    hospitalName: normText(sv.hospitalName),
-                    department: normText(sv.department),
-                    date: normalizeDateStr(sv.date),
-                    time: normalizeTimeStr(sv.time),
-                    reason: sv.reason || '',
-                    rehab: sv.rehab || '',
-                    notes: sv.notes || '',
-                    updatedAt: Number(sv.updatedAt) || 0,
-                    synced: true
-                };
-
-                const local = localById.get(sv.id);
-                if (local) {
-                    if (isDirty(local)) return; // 端末側の未送信の変更を優先（この後送信される）
-                    const changed = (local.updatedAt || 0) !== rec.updatedAt
-                        || localKey(local) !== serverKey(rec)
-                        || (local.notes || '') !== rec.notes;
-                    if (changed) {
-                        Object.assign(local, rec);
-                        touched.push(local);
-                        updated++;
-                    }
-                } else {
-                    const key = serverKey(rec);
-                    const twin = unsyncedByKey.get(key);
-                    if (twin) {
-                        // 同じ内容の未送信データ → シート側IDに統一（重複防止）
-                        unsyncedByKey.delete(key);
-                        twin.id = sv.id;
-                        if ((twin.notes || '') === rec.notes) {
-                            twin.synced = true;
-                            twin.updatedAt = rec.updatedAt || twin.updatedAt;
-                        }
-                    } else {
-                        appData.visits.push(rec);
-                        touched.push(rec);
-                        added++;
-                    }
-                }
-            });
-
-            // 他端末で削除された記録を反映（ただしシートが空のときは「再アップロード」扱い）
-            if (serverVisits.length === 0) {
-                appData.visits.forEach(v => { if (v.synced === true) v.synced = false; });
-            } else {
-                // 【v1.9.3】シートに無い記録を端末から自動削除しない（消失防止）。
-                // シートに無い記録は「未送信」に戻して送り直す。
-                appData.visits.forEach(v => {
-                    if (v.synced === true && !serverIds.has(v.id)) { v.synced = false; }
-                });
-            }
-
-            // 病院の紐づけ
-            if (metaAdopted) {
-                appData.visits.forEach(v => {
-                    if (v.hospitalId && !getHospitalById(v.hospitalId)) {
-                        const h = appData.hospitals.find(x => x.name === normText(v.hospitalName));
-                        if (h) v.hospitalId = h.id;
-                    }
-                });
-            }
-            touched.forEach(resolveHospitalFor);
-
-            return { added, updated, removed };
-        }
-
-        async function pullFromSheet() {
-            if (!isGasReady() || pulling) return { ok: false, skipped: true };
-            pulling = true;
-            updateSyncBadge();
-            try {
-                const url = savedGasUrl + (savedGasUrl.includes('?') ? '&' : '?') + '_=' + Date.now();
-                const res = await fetch(url, { method: 'GET', redirect: 'follow', cache: 'no-store' });
-                if (!res.ok) throw new Error(`HTTPエラー (${res.status})`);
-                const text = await res.text();
-                let json;
-                try { json = JSON.parse(text); } catch (e) { throw new Error(diagnoseGasText(text)); }
-                if (json.status !== 'success') throw new Error(json.message || 'GAS側でエラーが発生しました');
-                if (!json.version || json.version < 2) {
-                    throw new Error('GAS側のコードが古いままです。新しいgas_code.js（v2）を貼り付けて「新バージョン」で再デプロイしてください。');
-                }
-                await takeSnapshot('同期前');
-                const result = mergeFromServer(json);
-                appData.initialPullDone = true;
-                await persistOnly();
-                return Object.assign({ ok: true }, result);
-            } catch (err) {
-                syncError = getErrorReason(err);
-                if (/Failed to fetch|NetworkError|Load failed/i.test(syncError)) {
-                    syncError = '通信できませんでした（電波・オフライン）。つながったら自動で再同期します。';
-                }
-                return { ok: false, error: syncError };
-            } finally {
-                pulling = false;
-            }
-        }
-
-        function ensureVisibleMonth() {
-            const monthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-            const hasInCurrentMonth = appData.visits.some(v => v.date && v.date.startsWith(monthPrefix));
-            if (!hasInCurrentMonth && appData.visits.length > 0) {
-                const latest = getLatestVisitDate();
-                if (latest) {
-                    const parts = latest.split('-');
-                    currentYear = parseInt(parts[0], 10);
-                    currentMonth = parseInt(parts[1], 10) - 1;
-                }
-            }
-        }
-
-        function refreshAfterSync() {
-            if (rebuildPresetsFromHistory() > 0) persistOnly();
-            updateHospitalSelects();
-            updatePresetSelects();
-            ensureVisibleMonth();
-            renderCurrentView();
-            try { renderHospitalList(); } catch (e) {}
-        }
-
-        // ---- 取得 → 送信 をまとめて実行 ----
-        async function syncNow(manual = false) {
-            if (!isGasReady()) {
-                if (manual) showAlertModal('URLが未設定です', '先にGoogle Apps ScriptのウェブアプリURL（末尾 /exec）を入力して保存してください。', false);
+        async function sendAllVisitsToSheet() {
+            if (!savedGasUrl) {
+                showAlertModal('URLが未設定です', '先にGoogle Apps ScriptのウェブアプリURLを入力して保存してください。', false);
                 return;
             }
-            if (syncBusy) return;
-            syncBusy = true;
-            syncError = '';
-            updateSyncBadge();
-            let summary = null;
-            try {
-                const pr = await pullFromSheet();
-                if (pr.ok) {
-                    summary = pr;
-                    if (pr.added || pr.updated || pr.removed) refreshAfterSync();
-                }
-                // 初回の取得に成功するまでは送信しない（重複防止）
-                if (pr.ok || appData.initialPullDone) {
-                    const ok = await flushToSheet();
-                    if (!ok && !syncError) syncError = '送信に失敗しました';
-                }
-            } finally {
-                syncBusy = false;
-                updateDataStatusBar();
+            if (appData.visits.length === 0) {
+                showToast('送信する通院記録がありません', false);
+                return;
             }
-
-            if (manual) {
-                if (syncError) {
-                    showToast('同期できませんでした', false);
-                    showAlertModal('同期できませんでした', syncError, false);
-                } else {
-                    const s = summary || { added: 0, updated: 0, removed: 0 };
-                    showToast('同期しました', true);
-                    showAlertModal('同期しました', `シートから取得：追加 ${s.added}件 / 更新 ${s.updated}件 / 削除反映 ${s.removed}件\n未送信：${getPendingCount()}件`, true);
+            showConfirm(
+                'スプレッドシートへ一括送信',
+                `現在登録されている ${appData.visits.length}件 の通院記録をスプレッドシートへ送信しますか？`,
+                async () => {
+                    try {
+                        showToast('スプレッドシートへ送信中...', true);
+                        let sentCount = 0;
+                        for (const v of appData.visits) {
+                            const h = getHospitalById(v.hospitalId);
+                            const payload = {
+                                hospitalName: h ? h.name : (v.hospitalName || ''),
+                                department: h ? (h.dept || '') : '',
+                                date: v.date || '',
+                                time: v.time || '',
+                                reason: v.reason || '',
+                                rehab: v.rehab || '',
+                                notes: v.notes || ''
+                            };
+                            await fetch(savedGasUrl, {
+                                method: 'POST',
+                                mode: 'no-cors',
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                body: JSON.stringify(payload)
+                            });
+                            sentCount++;
+                        }
+                        showToast(`${sentCount}件をスプレッドシートへ保存しました`, true);
+                        showAlertModal('保存しました', `${sentCount}件の通院記録をスプレッドシートへ送信しました。`, true);
+                    } catch (err) {
+                        showToast('送信できませんでした: ' + getErrorReason(err), false);
+                        showAlertModal('送信できませんでした', getErrorReason(err), false);
+                    }
                 }
-            } else if (summary && summary.added > 0) {
-                showToast(`スプレッドシートから${summary.added}件を復元しました`, true);
-            }
-        }
-
-        function scheduleSync(delay = 700) {
-            if (!isGasReady() || !autoSyncEnabled) return;
-            clearTimeout(syncTimer);
-            syncTimer = setTimeout(async () => {
-                if (syncBusy || flushing) { scheduleSync(1500); return; }
-                if (!appData.initialPullDone) { syncNow(false); return; }
-                await flushToSheet();
-            }, delay);
-        }
-
-        function flushBeforeLeave() {
-            if (!isGasReady() || !autoSyncEnabled || flushing) return;
-            if (getPendingCount() === 0) return;
-            if (!appData.initialPullDone) return;
-            flushToSheet({ keepalive: true });
-        }
-
-        function registerSyncListeners() {
-            if (syncListenersRegistered) return;
-            syncListenersRegistered = true;
-            window.addEventListener('online', () => { if (autoSyncEnabled) syncNow(false); });
-            window.addEventListener('pagehide', flushBeforeLeave);
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'hidden') {
-                    flushBeforeLeave();
-                } else if (autoSyncEnabled && isGasReady()) {
-                    syncNow(false);
-                }
-            });
-            setInterval(() => {
-                if (document.visibilityState === 'visible' && autoSyncEnabled && isGasReady()) syncNow(false);
-            }, 60000);
-        }
-
-        function updateSyncBadge() {
-            const badge = document.getElementById('status-gas-badge');
-            const text = document.getElementById('status-gas-text');
-            if (!badge || !text) return;
-            const base = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border active:scale-95 transition';
-            const amber = 'bg-amber-50 border-amber-300 text-amber-900';
-            const rose = 'bg-rose-50 border-rose-300 text-rose-800';
-            const green = 'bg-emerald-50 border-emerald-200 text-emerald-800';
-            let cls = amber, msg = '';
-            const n = getPendingCount();
-            if (!isGasReady()) {
-                msg = '未連携：この端末内のみ保存（タップして設定）';
-            } else if (syncBusy || flushing || pulling) {
-                msg = '同期中…';
-            } else if (syncError) {
-                cls = rose;
-                msg = `同期エラー${n ? '・未送信' + n + '件' : ''}（タップで再試行）`;
-            } else if (n > 0) {
-                msg = `未送信 ${n}件（タップで送信）`;
-            } else {
-                cls = green;
-                const t = lastSyncAt ? new Date(lastSyncAt) : null;
-                msg = t ? `同期済み ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}` : 'シート連携ON';
-            }
-            badge.className = `${base} ${cls}`;
-            text.textContent = msg;
-            badge.title = syncError || '';
-        }
-
-        function onSyncBadgeClick() {
-            if (!isGasReady()) { openSyncModal(); return; }
-            syncNow(true);
+            );
         }
 
         async function restoreFromSheet() {
@@ -2248,389 +1394,66 @@
                 showAlertModal('URLの形式エラー', 'GASのウェブアプリURLは末尾が「/exec」のものを入力してください。', false);
                 return;
             }
-            await syncNow(true);
-        }
-
-        async function sendAllVisitsToSheet() {
-            if (!isGasReady()) {
-                showAlertModal('URLが未設定です', '先にGoogle Apps ScriptのウェブアプリURL（末尾 /exec）を入力して保存してください。', false);
-                return;
-            }
-            if (appData.visits.length === 0) {
-                showToast('送信する通院記録がありません', false);
-                return;
-            }
             showConfirm(
-                'スプレッドシートへ全件再送信',
-                `${appData.visits.length}件の通院記録をシートへ送り直します。\n（IDで管理しているので重複行は増えません）`,
+                'スプレッドシートから復元',
+                'スプレッドシートに保存されている病院・通院履歴を読み込んで端末へ復元しますか？',
                 async () => {
-                    appData.visits.forEach(v => { v.synced = false; });
-                    markMetaDirty();
-                    await persistOnly();
-                    await syncNow(true);
+                    try {
+                        showToast('スプレッドシートからデータを取得中...', true);
+                        const res = await fetch(savedGasUrl, { method: 'GET', redirect: 'follow', cache: 'no-store' });
+                        if (!res.ok) throw new Error(`HTTPエラー (${res.status})`);
+                        const rawText = await res.text();
+                        let json;
+                        try {
+                            json = JSON.parse(rawText);
+                        } catch (parseErr) {
+                            throw new Error('GASから正しいデータが返されませんでした。GASのデプロイ設定（新バージョン・アクセスできるユーザー：全員）をご確認ください。');
+                        }
+                        if (json.status !== 'success') throw new Error(json.message || 'GAS側でエラーが発生しました');
+
+                        const sheetHospitals = Array.isArray(json.hospitals) ? json.hospitals : [];
+                        const sheetVisits = Array.isArray(json.visits) ? json.visits : [];
+
+                        sheetHospitals.forEach(sh => {
+                            if (sh.name && !appData.hospitals.some(h => h.id === sh.id || h.name === sh.name)) {
+                                appData.hospitals.push(sh);
+                            }
+                        });
+
+                        let addedCount = 0;
+                        sheetVisits.forEach(sv => {
+                            const matchedH = appData.hospitals.find(h => h.id === sv.hospitalId || ('h_' + h.name) === sv.hospitalId);
+                            const hId = matchedH ? matchedH.id : sv.hospitalId;
+                            const hName = matchedH ? matchedH.name : (sv.hospitalName || '');
+                            const exists = appData.visits.some(v =>
+                                v.date === sv.date && v.time === sv.time && v.reason === (sv.reason || '') && v.rehab === (sv.rehab || '')
+                            );
+                            if (!exists) {
+                                appData.visits.push({
+                                    id: generateId('v'),
+                                    hospitalId: hId,
+                                    hospitalName: hName,
+                                    date: sv.date || '',
+                                    time: sv.time || '',
+                                    reason: sv.reason || '',
+                                    rehab: sv.rehab || '',
+                                    notes: sv.notes || ''
+                                });
+                                addedCount++;
+                            }
+                        });
+
+                        await saveAppData();
+                        updateHospitalSelects();
+                        renderCurrentView();
+                        showToast(`スプレッドシートから${addedCount}件復元しました`, true);
+                        showAlertModal('復元しました', `スプレッドシートからデータを取得しました。\n新しく追加された記録：${addedCount}件`, true);
+                    } catch (err) {
+                        showToast('復元できませんでした', false);
+                        showAlertModal('復元できませんでした', getErrorReason(err), false);
+                    }
                 }
             );
-        }
-
-        // ---- JSONバックアップ ----
-        function exportJsonBackup() {
-            try {
-                const backup = {
-                    app: 'hospital_tracker',
-                    exportedAt: new Date().toISOString(),
-                    hospitals: appData.hospitals,
-                    visits: appData.visits,
-                    reasonPresets: appData.reasonPresets,
-                    rehabPresets: appData.rehabPresets
-                };
-                const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `通院記録バックアップ_${new Date().toISOString().slice(0, 10)}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-                showToast('バックアップを保存しました', true);
-            } catch (err) {
-                showToast('バックアップできませんでした: ' + getErrorReason(err), false);
-            }
-        }
-
-        function handleJsonFileImport(event) {
-            const file = event.target.files && event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async () => {
-                try {
-                    const data = JSON.parse(String(reader.result || ''));
-                    if (!data || !Array.isArray(data.visits)) throw new Error('バックアップファイルの形式が正しくありません');
-                    const idMap = {};
-                    (Array.isArray(data.hospitals) ? data.hospitals : []).forEach(h => {
-                        if (!h || !h.name) return;
-                        let ex = appData.hospitals.find(x => x.id === h.id)
-                              || appData.hospitals.find(x => x.name === h.name && normText(x.dept) === normText(h.dept));
-                        if (!ex) {
-                            ex = { id: h.id || generateId('h'), name: h.name, dept: h.dept || '' };
-                            appData.hospitals.push(ex);
-                        }
-                        idMap[h.id] = ex.id;
-                    });
-                    let added = 0;
-                    data.visits.forEach(v => {
-                        if (!v || !v.id || appData.visits.some(x => x.id === v.id)) return;
-                        appData.visits.push({
-                            id: v.id,
-                            hospitalId: idMap[v.hospitalId] || v.hospitalId || '',
-                            hospitalName: v.hospitalName || '',
-                            date: v.date || '',
-                            time: v.time || '',
-                            reason: v.reason || '',
-                            rehab: v.rehab || '',
-                            notes: v.notes || '',
-                            updatedAt: Date.now(),
-                            synced: false
-                        });
-                        added++;
-                    });
-                    ['reasonPresets', 'rehabPresets'].forEach(k => {
-                        (Array.isArray(data[k]) ? data[k] : []).forEach(p => {
-                            if (p && !appData[k].includes(p)) appData[k].push(p);
-                        });
-                    });
-                    markMetaDirty();
-                    await saveAppData();
-                    refreshAfterSync();
-                    showToast(`バックアップから${added}件を読み込みました`, true);
-                    showAlertModal('読み込み完了', `バックアップから新しく追加された記録：${added}件`, true);
-                } catch (err) {
-                    showToast('読み込めませんでした', false);
-                    showAlertModal('読み込めませんでした', getErrorReason(err), false);
-                } finally {
-                    event.target.value = '';
-                }
-            };
-            reader.onerror = () => showToast('ファイルを読み込めませんでした', false);
-            reader.readAsText(file, 'utf-8');
-        }
-
-        // ---- URL埋め込み用の1行 ----
-        function copyDefaultUrlLine() {
-            const inputUrl = (document.getElementById('gas-url-input').value || '').trim() || savedGasUrl;
-            if (!inputUrl) {
-                showToast('先にGASのウェブアプリURLを入力してください', false);
-                return;
-            }
-            const line = `const DEFAULT_GAS_URL = '${inputUrl.replace(/'/g, '')}';`;
-            let ok = false;
-            try {
-                const temp = document.createElement('textarea');
-                temp.value = line;
-                temp.style.position = 'fixed';
-                temp.style.opacity = '0';
-                document.body.appendChild(temp);
-                temp.select();
-                ok = document.execCommand('copy');
-                document.body.removeChild(temp);
-            } catch (e) {}
-            if (!ok && navigator.clipboard) { try { navigator.clipboard.writeText(line); ok = true; } catch (e) {} }
-            if (ok) {
-                showAlertModal('コピーしました', 'index.html の中の\nconst DEFAULT_GAS_URL = \'\';\nという1行を、コピーした行に置き換えて保存してください。\n以後、ブラウザのデータが消えても必ずシートと連携します。', true);
-            } else {
-                showAlertModal('コピーできませんでした', line, false);
-            }
-        }
-
-        function normalizeDateStr(raw) {
-            if (!raw) return '';
-            const str = String(raw).trim();
-            const m = str.match(/(\d{4})[\/\-\.年](\d{1,2})[\/\-\.月](\d{1,2})/);
-            if (m) {
-                return `${m[1]}-${String(m[2]).padStart(2, '0')}-${String(m[3]).padStart(2, '0')}`;
-            }
-            return str;
-        }
-
-        function normalizeTimeStr(raw) {
-            if (!raw) return '';
-            const str = String(raw).trim();
-            const m = str.match(/(\d{1,2}):(\d{2})/);
-            if (m) {
-                return `${String(m[1]).padStart(2, '0')}:${m[2]}`;
-            }
-            return str;
-        }
-
-        function parseDelimitedText(text, delimiter) {
-            const rows = [];
-            let currentRow = [];
-            let currentVal = '';
-            let inQuotes = false;
-
-            const clean = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-            for (let i = 0; i < clean.length; i++) {
-                const ch = clean[i];
-                if (inQuotes) {
-                    if (ch === '"') {
-                        if (clean[i + 1] === '"') {
-                            currentVal += '"';
-                            i++;
-                        } else {
-                            inQuotes = false;
-                        }
-                    } else {
-                        currentVal += ch;
-                    }
-                } else {
-                    if (ch === '"') {
-                        inQuotes = true;
-                    } else if (ch === delimiter) {
-                        currentRow.push(currentVal.trim());
-                        currentVal = '';
-                    } else if (ch === '\n') {
-                        currentRow.push(currentVal.trim());
-                        if (currentRow.some(cell => cell !== '')) {
-                            rows.push(currentRow);
-                        }
-                        currentRow = [];
-                        currentVal = '';
-                    } else {
-                        currentVal += ch;
-                    }
-                }
-            }
-            if (currentVal !== '' || currentRow.length > 0) {
-                currentRow.push(currentVal.trim());
-                if (currentRow.some(cell => cell !== '')) {
-                    rows.push(currentRow);
-                }
-            }
-            return rows;
-        }
-
-        async function importRecordsFromRows(rows) {
-            if (!rows || rows.length === 0) {
-                showAlertModal('データが見つかりません', 'インポートできる行がありませんでした。', false);
-                return;
-            }
-
-            let startIdx = 0;
-            let colMap = null;
-            const firstRowJoined = rows[0].join(' ');
-            const hasHeader = firstRowJoined.includes('病院') || firstRowJoined.includes('通院日') || firstRowJoined.includes('リハビリ') || firstRowJoined.includes('登録日時');
-
-            if (hasHeader) {
-                startIdx = 1;
-                colMap = { hospital: -1, dept: -1, date: -1, time: -1, reason: -1, rehab: -1, notes: -1 };
-                rows[0].forEach((h, idx) => {
-                    const t = h.replace(/\s+/g, '');
-                    if (t.includes('病院')) colMap.hospital = idx;
-                    else if (t.includes('診療科') || t.includes('科')) colMap.dept = idx;
-                    else if (t.includes('通院日') || (t === '日付')) colMap.date = idx;
-                    else if (t.includes('時間') || t.includes('時刻')) colMap.time = idx;
-                    else if (t.includes('理由') || t.includes('診察')) colMap.reason = idx;
-                    else if (t.includes('リハビリ')) colMap.rehab = idx;
-                    else if (t.includes('メモ') || t.includes('備考')) colMap.notes = idx;
-                });
-            }
-
-            let addedCount = 0;
-            let skippedCount = 0;
-            let latestDate = '';
-
-            for (let i = startIdx; i < rows.length; i++) {
-                const r = rows[i];
-                if (!r || r.length === 0) continue;
-
-                let hName = '', dept = '', rawDate = '', rawTime = '', reason = '', rehab = '', notes = '';
-
-                if (colMap && (colMap.hospital !== -1 || colMap.date !== -1)) {
-                    hName = colMap.hospital >= 0 ? (r[colMap.hospital] || '') : '';
-                    dept = colMap.dept >= 0 ? (r[colMap.dept] || '') : '';
-                    rawDate = colMap.date >= 0 ? (r[colMap.date] || '') : '';
-                    rawTime = colMap.time >= 0 ? (r[colMap.time] || '') : '';
-                    reason = colMap.reason >= 0 ? (r[colMap.reason] || '') : '';
-                    rehab = colMap.rehab >= 0 ? (r[colMap.rehab] || '') : '';
-                    notes = colMap.notes >= 0 ? (r[colMap.notes] || '') : '';
-                } else {
-                    const isFirstColDateOnly = /^\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}$/.test(r[0] || '');
-                    if (isFirstColDateOnly && r.length <= 7) {
-                        rawDate = r[0] || '';
-                        rawTime = r[1] || '';
-                        hName = r[2] || '';
-                        dept = r[3] || '';
-                        reason = r[4] || '';
-                        rehab = r[5] || '';
-                        notes = r[6] || '';
-                    } else {
-                        hName = r[1] || '';
-                        dept = r[2] || '';
-                        rawDate = r[3] || '';
-                        rawTime = r[4] || '';
-                        reason = r[5] || '';
-                        rehab = r[6] || '';
-                        notes = r[7] || '';
-                    }
-                }
-
-                const date = normalizeDateStr(rawDate);
-                const time = normalizeTimeStr(rawTime);
-                hName = hName.trim();
-                dept = dept.trim();
-                reason = reason.trim();
-                rehab = rehab.trim();
-                notes = notes.trim();
-
-                if (!date && !hName && !reason && !rehab) continue;
-
-                let hospitalId = '';
-                if (hName) {
-                    let existingH = appData.hospitals.find(h => h.name === hName);
-                    if (!existingH) {
-                        existingH = { id: generateId('h'), name: hName, dept };
-                        appData.hospitals.push(existingH);
-                    }
-                    hospitalId = existingH.id;
-                }
-
-                const isDup = appData.visits.some(v =>
-                    v.date === date &&
-                    v.time === time &&
-                    (v.hospitalName === hName || v.hospitalId === hospitalId) &&
-                    v.reason === reason &&
-                    v.rehab === rehab
-                );
-
-                if (isDup) {
-                    skippedCount++;
-                    continue;
-                }
-
-                appData.visits.push({
-                    id: generateId('v'),
-                    hospitalId,
-                    hospitalName: hName,
-                    date,
-                    time,
-                    reason,
-                    rehab,
-                    notes,
-                    updatedAt: Date.now(),
-                    synced: false
-                });
-                addedCount++;
-                if (date && date > latestDate) latestDate = date;
-            }
-            markMetaDirty();
-
-            if (addedCount > 0 && latestDate) {
-                const parts = latestDate.split('-');
-                if (parts.length === 3) {
-                    currentYear = parseInt(parts[0], 10);
-                    currentMonth = parseInt(parts[1], 10) - 1;
-                }
-            }
-
-            await saveAppData();
-            updateHospitalSelects();
-            renderCurrentView();
-
-            if (addedCount > 0) {
-                showToast(`${addedCount}件の履歴をインポートしました`, true);
-                showAlertModal(
-                    'インポート完了',
-                    `スプレッドシートの履歴を取り込みました！\n\n新規追加：${addedCount}件` + (skippedCount > 0 ? `\n重複スキップ：${skippedCount}件` : ''),
-                    true
-                );
-            } else if (skippedCount > 0) {
-                showToast('すべて登録済みの履歴でした', true);
-                showAlertModal('インポート完了', `読み込んだデータ（${skippedCount}件）はすでにすべて登録済みでした。`, true);
-            } else {
-                showToast('取り込める履歴が見つかりませんでした', false);
-                showAlertModal('取り込めませんでした', '日付や病院名が含まれる有効な行が見つかりませんでした。\nデータの形式をご確認ください。', false);
-            }
-        }
-
-        function handleCsvFileImport(event) {
-            const file = event.target.files && event.target.files[0];
-            event.target.value = '';
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const text = e.target.result || '';
-                    const delimiter = text.includes('\t') && !text.includes(',') ? '\t' : ',';
-                    const rows = parseDelimitedText(text, delimiter);
-                    await importRecordsFromRows(rows);
-                } catch (err) {
-                    showToast('CSVの読み込みに失敗しました', false);
-                    showAlertModal('インポートできませんでした', getErrorReason(err), false);
-                }
-            };
-            reader.onerror = () => {
-                showToast('ファイルを読み込めませんでした', false);
-            };
-            reader.readAsText(file, 'UTF-8');
-        }
-
-        async function handlePasteImport() {
-            const area = document.getElementById('paste-import-area');
-            const text = (area.value || '').trim();
-            if (!text) {
-                showToast('スプレッドシートからコピーした内容を貼り付けてください', false);
-                return;
-            }
-            try {
-                const delimiter = text.includes('\t') ? '\t' : ',';
-                const rows = parseDelimitedText(text, delimiter);
-                await importRecordsFromRows(rows);
-                area.value = '';
-            } catch (err) {
-                showToast('インポートに失敗しました', false);
-                showAlertModal('インポートできませんでした', getErrorReason(err), false);
-            }
         }
 
         function exportCSV() {
@@ -2664,7 +1487,6 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-
                 showToast('CSVファイルをダウンロードしました', true);
             } catch (err) {
                 showToast('CSV出力できませんでした: ' + getErrorReason(err), false);
@@ -2678,16 +1500,9 @@
         window.onload = async function() {
             try {
                 await loadAllData();
-                if (rebuildPresetsFromHistory() > 0) await persistOnly();
                 updateHospitalSelects();
                 updatePresetSelects();
-                ensureVisibleMonth();
                 renderCurrentView();
-                updateDataStatusBar();
-                registerSyncListeners();
-                if (isGasReady() && autoSyncEnabled) {
-                    syncNow(false);
-                }
             } catch (err) {
                 console.error('初期化エラー:', err);
                 showToast('初期化中にエラーが発生しました', false);
